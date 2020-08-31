@@ -14,7 +14,7 @@ import * as hitComps from "./hitComps";
 
 const Results = connectStateResults(
   ({ searchState: state, searchResults: res, children }) =>
-    res && res.nbHits > 0 ? children : `No results for '${state.query}'`
+    res && res.nbHits > 0 ? children : `No results for '${state.query || ""}'`
 );
 
 const Stats = connectStateResults(
@@ -47,11 +47,15 @@ export const NavSearch = ({ collapse, hitsAsGrid }) => {
   const ref = createRef();
   const [query, setQuery] = useState(``);
   const [focus, setFocus] = useState(false);
+  const [Mounted, setMounted] = useState(false);
   const searchClient = algoliasearch(
     process.env.GATSBY_ALGOLIA_APP_ID,
     process.env.GATSBY_ALGOLIA_SEARCH_KEY
   );
   useClickOutside(ref, () => setFocus(false));
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
   return (
     <InstantSearch
       searchClient={searchClient}
@@ -71,13 +75,19 @@ export const NavSearch = ({ collapse, hitsAsGrid }) => {
         >
           {indices.map(({ name, title, hitComp }) => (
             <Index key={name} indexName={name}>
-              <header>
-                <h3>{title}</h3>
-                <Stats />
-              </header>
-              <Results>
-                <Hits hitComponent={hitComps[hitComp](() => setFocus(false))} />
-              </Results>
+              {Mounted ? (
+                <>
+                  <header>
+                    <h3>{title}</h3>
+                    <Stats />
+                  </header>
+                  <Results>
+                    <Hits
+                      hitComponent={hitComps[hitComp](() => setFocus(false))}
+                    />
+                  </Results>
+                </>
+              ) : null}
             </Index>
           ))}
           <PoweredBy />
