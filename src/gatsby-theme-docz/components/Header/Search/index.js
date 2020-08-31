@@ -75,19 +75,13 @@ export const NavSearch = ({ collapse, hitsAsGrid }) => {
         >
           {indices.map(({ name, title, hitComp }) => (
             <Index key={name} indexName={name}>
-              {Mounted ? (
-                <>
-                  <header>
-                    <h3>{title}</h3>
-                    <Stats />
-                  </header>
-                  <Results>
-                    <Hits
-                      hitComponent={hitComps[hitComp](() => setFocus(false))}
-                    />
-                  </Results>
-                </>
-              ) : null}
+              <header>
+                <h3>{title}</h3>
+                <Stats />
+              </header>
+              <Results>
+                <Hits hitComponent={hitComps[hitComp](() => setFocus(false))} />
+              </Results>
             </Index>
           ))}
           <PoweredBy />
