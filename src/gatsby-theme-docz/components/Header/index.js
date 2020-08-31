@@ -36,19 +36,17 @@ export const Header = (props) => {
         <Logo />
 
         <Flex>
-          {
-            <Box sx={{ mr: 2 }}>
-              <a
-                href="https://github.com/cartoonmangodev/react-boilerplate-redux-saga-hoc"
-                sx={styles.headerButton}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Github size={15} />
-              </a>
-            </Box>
-          }
           <Search />
+          <Box sx={{ mr: 2 }}>
+            <a
+              href="https://github.com/cartoonmangodev/react-boilerplate-redux-saga-hoc"
+              sx={styles.headerButton}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Github size={15} />
+            </a>
+          </Box>
           {/* {showDarkModeSwitch && ( */}
           <button sx={styles.headerButton} onClick={toggleColorMode}>
             <Sun size={15} />
