@@ -1,0 +1,94 @@
+---
+name: 4.0.5 Axios Interceptors
+route: /docs/advanced-concepts/axios-interceptors
+parent: Documentation
+menu: 4. Advanced Concepts
+---
+
+## # Axios Interceptors
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+import axios from "axios";
+import promise from "promise";
+
+const request = axios;
+request.defaults.withCredentials = true;
+request.interceptors.request.use(
+  (config) => {
+    if (!config.headers.Authorization) {
+      const token = localStorage.getItem("token");
+      if (token)
+        request.defaults.headers.common.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => promise.reject(error)
+);
+
+request.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => Promise.reject(error)
+);
+
+const AuthenticationHOC = HOC({
+  initialState: {
+    profile: {},
+  },
+  apiEndPoints: {
+    TEST_API: {},
+    REGISTER_API: {
+      url: `users/user-signup/`,
+      method: "POST",
+    },
+  },
+  axiosInterceptors: request,
+  constantReducer: ({ type, state, action, constants, initialState }) => {
+    if (type === "LOGOUT") return initialState;
+    return state;
+  },
+  name: "Auth",
+});
+/*
+Example:
+
+const { dispatch } = props;
+dispatch({ type: 'LOGOUT' });
+
+*/
+```
+
+## # Modifying default axios from package
+
+```javascript {.line-numbers}
+import {
+  HOC,
+  commonConstants,
+  store,
+  axios,
+} from "react-boilerplate-redux-saga-hoc";
+import promise from "promise";
+
+const request = axios;
+request.defaults.withCredentials = true;
+request.interceptors.request.use(
+  (config) => {
+    if (!config.headers.Authorization) {
+      const token = localStorage.getItem("token");
+      if (token)
+        request.defaults.headers.common.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => promise.reject(error)
+);
+
+request.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => Promise.reject(error)
+);
+```

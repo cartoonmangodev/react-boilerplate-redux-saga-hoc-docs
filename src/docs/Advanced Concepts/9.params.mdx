@@ -1,0 +1,60 @@
+---
+name: 4.0.9 PARAMS
+route: /docs/advanced-concepts/params
+parent: Documentation
+menu: 4. Advanced Concepts
+---
+
+## # PARAMS
+
+```bash
+task - <Object>
+tasks - <Array of task>
+request - <Object>
+callback - <Object>
+updateStateCallback - <Function>
+subKey - <Array> accessing deep object
+deleteKey - <Array> of keys to delete
+filter - <Array> storing data based on filter
+filter - <Array> update n number of filters at single task
+eg: [['filter1'],['filter2']]
+id - <Array> || <string> || <number>
+key - id Key example: 'user_id' <String>
+clearData - clearing data <Boolean> for infinite
+isAppendTop - for storing data in top for infinite
+limit - <Number> for infinite
+query - <Object> adding query parameters to url
+params - <Object> params for aps eg:api/:id
+successCallback - <Function> <{res : <Object>,data<Object>,status, message}>
+errorCallback - <Function> <{error : <Error instance>,errorData<Object>,status, message}>
+updateCallback - <Function> <Object>
+payload - <Function>
+ON_SUCCESS - storing data based on success data or loaded data
+ON_UNMOUNT - reset the data
+ON_ERROR - setting the loader false and error data
+Api End Point Params -
+* url,
+* method,
+* responseMessageKey,
+* responseDataKey,
+* responseStatusKey,
+* responseStatusCodeKey,
+* errorStatusKey,
+* errorMessageKey,
+* errorDataKey,
+* errorHandlerStatusCode,
+* effect - takeLatest default || 'every' for takeEvery
+
+GetData - returns
+* data - <Object>
+* loader - <Boolean>
+* lastUpdated - <Boolean>
+* isInfinite - <Boolean>
+* isInfiniteEnd - <Boolean>
+
+GetData - params
+* Object(data) - <Object>
+* defaultValue - <Array || Object || Boolean || null || String >
+* loader - <Boolean>
+* filter - <Array>
+```

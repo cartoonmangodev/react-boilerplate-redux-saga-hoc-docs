@@ -1,0 +1,216 @@
+---
+name: 2.2 Updating Data
+route: /docs/basic-concepts/updating-data
+parent: Documentation
+menu: 2. Basic Concepts
+---
+
+# **Updating Data**
+
+## # Updating data automatically by calling api
+
+     Note:
+     -It will only update if the reponse data is object otherwise it will replace the data.
+     -It won't update Array.
+     -Array will be handle in diferent way.you will find Below
+
+```js
+const BASE_URL = "https://example.com/";
+
+const DEMO_API_CONFIGURATION = {
+  url: `${BASE_URL}user/`,
+  method: "GET",
+  responseStatusCode: [900],
+  responseStatusCodeKey: "code",
+  responseDataKey: "data",
+  responseMessageKey: "status",
+  errorMessageKey: "error",
+};
+
+DEMO_API_CONFIGURATION_CALL({
+  task: {
+    name: "Update-Handler",
+  },
+});
+
+// Example: storedData = {
+//   name: "example",
+//   date: "22-8-2222",
+// };
+// responseData = {
+//   name: "example 2",
+// };
+// UpdateData = {
+//   name: "example 2",
+//   date: "22-8-2222",
+// };
+```
+
+## # Updating Data in an Array
+
+     Note:
+     -If the update data is Array it requires extra 2 parameters to itentify the Object that is id,key
+
+##### id - Array || string || number - Array of ids
+
+##### key - Key example: 'user_id' - String
+
+```js
+const BASE_URL = "https://example.com/";
+
+const DEMO_API_CONFIGURATION = {
+  url: `${BASE_URL}user/${id}`,
+  method: "GET",
+  responseStatusCode: [900],
+  responseStatusCodeKey: "code",
+  responseDataKey: "data",
+  responseMessageKey: "status",
+  errorMessageKey: "error",
+};
+
+DEMO_API_CONFIGURATION_CALL({
+  task: {
+    name: "Update-Handler",
+    key: "id", // for handling array of object
+    id: [2, 3],
+  },
+  request: {
+    params: { id: 1 },
+    query: { skip: 10, age: 20 },
+    payload: { age: 20 }, // for post calls
+    paramsSerializer: { arrayFormat: "bracket" }, //default: none - refer query-string npm package
+  },
+});
+/*
+Example:
+storedData = [{
+  id: 1
+  name: 'example',
+  date: '22-8-2222'
+},
+{
+  id: 2
+  name: 'example',
+  date: '22-8-2222'
+}]
+
+responseData = {
+  name: 'example 2'
+}
+
+UpdateData = [{
+  id: 1
+  name: 'example',
+  date: '22-8-2222'
+},
+{
+  id: 2
+  name: 'example 2',
+  date: '22-8-2222'
+}]
+*/
+```
+
+     Note:
+     -In the above scenario id number 3 will be ignored.
+     -If u want to append or prepend data there are some other ways.you will find below
+
+## # Callbacks for handling Updated Data
+
+     Note:
+     -There are several callback are available can be used in different requirements
+
+```js
+const BASE_URL = "https://example.com/";
+
+const DEMO_API_CONFIGURATION = {
+  url: `${BASE_URL}user/${id}`,
+  method: "GET",
+  responseStatusCode: [900],
+  responseStatusCodeKey: "code",
+  responseDataKey: "data",
+  responseMessageKey: "status",
+  errorMessageKey: "error",
+};
+
+DEMO_API_CONFIGURATION_CALL({
+  task: {
+    name: "Update-Handler",
+    key: "id", // for handling array of object
+    id: [2, 3],
+  },
+  request: {
+    params: { id: 1 },
+    query: { skip: 10, age: 20 },
+    payload: { age: 20 }, // for post calls
+    paramsSerializer: { arrayFormat: "bracket" }, //default: none - refer query-string npm package
+  },
+  callback: {
+    updateCallback: (storeData: oldData, responseData: newData) => {
+      return { ...oldData, ...newData } || oldData.concat(newData); // It will update  the data in paricular reducer
+    },
+    updateStateCallback: ({ state: updatedState, data: responseData }) => {
+      return updatedState; // By default it takes the updated state if returns undefined or null
+    },
+    successCallback: () => {
+      // handle success toast or call any other api
+    },
+    errorCallback: ({
+      error,
+      errorData: responseErrorParser,
+      message,
+      status,
+      errors,
+    }) => {
+      // handle error toast or call any other api
+    },
+  },
+});
+```
+
+## # Manually updating data by calling custom task
+
+```js
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Update-Handler",
+    key: "id", // for handling array of object
+    id: [2, 3],
+    response: {
+      data: {
+        age: "20",
+      },
+    },
+  },
+  callback: {
+    updateCallback: (storeData: oldData, responseData: newData) => {
+      return { ...oldData, ...newData } || oldData.concat(newData); // It will update  the data in paricular reducer
+    },
+  },
+});
+```
+
+## # Getting Updated Data from store
+
+```js
+import { useMemo } from "react";
+import { useQuery } from "react-boilerplate-redux-saga-hoc";
+const {
+  Auth_hoc: {
+    reducerName,
+    reducerConstants: { DEMO_API_CONFIGURATION },
+  },
+} = props;
+
+const { loader, data, lastUpdated, isInfinite, infiniteEnd } = useQuery(
+  reducerName,
+  DEMO_API_CONFIGURATION
+);
+```
+
+Next - [Handling Infinite Data](/docs/basic-concepts/handling-infinite-data)

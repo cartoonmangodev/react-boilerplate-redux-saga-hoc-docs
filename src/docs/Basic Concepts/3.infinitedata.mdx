@@ -1,0 +1,179 @@
+---
+name: 2.3 Handling Infinite Data
+route: /docs/basic-concepts/handling-infinite-data
+parent: Documentation
+menu: 2. Basic Concepts
+---
+
+# Handling Infinite Data or Infinite Scrolling
+
+## # storing infinite data automatically by calling api
+
+     Note:
+     - Data will be stored automatically in the reducer and also it handles all the states.
+     - Such as error,infinte,loader..etc
+
+```js
+const BASE_URL = "https://example.com/";
+
+const DEMO_API_CONFIGURATION = {
+  url: `${BASE_URL}user/`,
+  method: "GET",
+  responseStatusCode: [900],
+  responseStatusCodeKey: "code",
+  responseDataKey: "data",
+  responseMessageKey: "status",
+  errorMessageKey: "error",
+};
+
+DEMO_API_CONFIGURATION_CALL({
+  task: {
+    name: "Infinite-Handler",
+    isAppendTop: true, // By default data will add below
+  },
+  callback: {
+    updateCallback: (storeData: oldData, responseData: newData) => {
+      return { ...oldData, ...newData } || oldData.concat(newData); // It will update  the data in paricular reducer
+    },
+  },
+});
+```
+
+     Note:
+     - It will append data if already data is array.
+     - Other wise it will replace the new data
+
+## # Prepend data instead of appending data
+
+     Note:
+     - It will store the data at the top instead of last
+
+```js
+const BASE_URL = "https://example.com/";
+
+const DEMO_API_CONFIGURATION = {
+  url: ({ id }) => `${BASE_URL}user/${id}`,
+  method: "GET",
+  responseStatusCode: [900],
+  responseStatusCodeKey: "code",
+  responseDataKey: "data",
+  responseMessageKey: "status",
+  errorMessageKey: "error",
+};
+
+DEMO_API_CONFIGURATION_CALL({
+  task: {
+    name: "Infinite-Handler",
+    isAppendTop: true, // By default data will add below
+  },
+  request: {
+    params: { id: 1 },
+    query: { skip: 10, age: [20, 20] },
+    payload: { age: 20 }, // for post calls
+    paramsSerializer: { arrayFormat: "bracket" }, //default: none - refer query-string npm package
+  },
+});
+```
+
+## # Callbacks for handling success or failure
+
+       Note:
+       - Callback are another helper function which handles errors, success, cancel..etc
+
+```js
+const BASE_URL = "https://example.com/";
+
+const DEMO_API_CONFIGURATION = {
+  url: `${BASE_URL}user/${id}`,
+  method: "GET",
+  responseStatusCode: [900],
+  responseStatusCodeKey: "code",
+  responseDataKey: "data",
+  responseMessageKey: "status",
+  errorMessageKey: "error",
+};
+
+const responseErrorParser = (data) =>
+  (Array.isArray(data) &&
+    data.reduce((acc, curr) => {
+      const [key, message] = Object.entries(curr)[0];
+      const payloadKey = key.split(",")[1];
+      return {
+        ...acc,
+        [payloadKey]: message,
+      };
+    }, {})) ||
+  {};
+
+DEMO_API_CONFIGURATION_CALL({
+  task: {
+    name: "Infinite-Handler",
+    isAppendTop: true, // By default data will add below
+  },
+  request: {
+    params: { id: 1 },
+    query: { skip: 10, age: [20, 20] },
+    paramsSerializer: { arrayFormat: "bracket" }, //default: none - refer query-string npm package
+  },
+  callback: {
+    successCallback: ({ res, data, message, status }) => {
+      // handle toast or call any other api
+    },
+    errorCallback: ({
+      error,
+      errorData: responseErrorParser,
+      message,
+      status,
+      errors,
+    }) => {
+      // handle toast or call any other api
+    },
+  },
+});
+```
+
+## # Manually storing or updating infinite data by calling custom task
+
+    Note:
+    -Calling custom task will allow us to manipulate data without calling any api..such as adding count,linit,skip..etc
+
+```js
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Infinite-Handler",
+    isAppendTop: true, // By default data will add below
+    response: {
+      data: [
+        {
+          name: "example",
+        },
+      ],
+    },
+  },
+});
+```
+
+## # Getting Data from store
+
+```js
+import { useMemo } from "react";
+import { useQuery } from "react-boilerplate-redux-saga-hoc";
+const {
+  Auth_hoc: {
+    reducerName,
+    reducerConstants: { DEMO_API_CONFIGURATION },
+  },
+} = props;
+
+const { loader, data, lastUpdated, isInfinite, infiniteEnd } = useQuery(
+  reducerName,
+  DEMO_API_CONFIGURATION
+);
+```
+
+Next - [Deleting Data](/docs/basic-concepts/deleting-data)

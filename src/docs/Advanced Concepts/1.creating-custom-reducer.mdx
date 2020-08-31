@@ -1,0 +1,88 @@
+---
+name: 4.0.1 Creating Custom Reducer
+route: /docs/advanced-concepts/creating-custom-reducer
+parent: Documentation
+menu: 4. Advanced Concepts
+---
+
+## # Creating Custom Reducer
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const AuthenticationHOC = HOC({ handlers: [] })({
+  initialState: {
+    profile: {},
+  },
+  apiEndPoints: {
+    TEST_API: {},
+    REGISTER_API: {
+      url: `users/user-signup/`,
+      method: "POST",
+    },
+  },
+  constantReducer: ({ type, state, action, constants, initialState }) => {
+    if (type === "LOGOUT") return initialState;
+    return state;
+  },
+  name: "Auth",
+});
+/*
+Example: const { dispatch } = props;
+dispatch({ type: "LOGOUT" });
+*/
+```
+
+## # Passing create Reducer or own reducer
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+import { combineReducers } from "redux";
+import { connectRouter } from "connected-react-router";
+
+import history from "utils/history";
+import globalReducer from "containers/App/reducer";
+import languageProviderReducer from "containers/LanguageProvider/reducer";
+
+/**
+ * Merges the main reducer with the router state and dynamically injected reducers
+ */
+/* this is the pattern for passing custom reducer */
+
+/**
+ * Merges the main reducer with the router state and dynamically injected reducers
+ */
+export default function createReducer(injectedReducers = {}) {
+  const rootReducer = combineReducers({
+    global: globalReducer,
+    language: languageProviderReducer,
+    router: connectRouter(history),
+    ...injectedReducers,
+  });
+
+  return rootReducer;
+}
+
+const AuthenticationHOC = HOC({ createReducer })({
+  initialState: {
+    profile: {},
+  },
+  apiEndPoints: {
+    TEST_API: {},
+    REGISTER_API: {
+      url: `users/user-signup/`,
+      method: "POST",
+    },
+  },
+  constantReducer: ({ type, state, action, constants, initialState }) => {
+    if (type === "LOGOUT") return initialState;
+    return state;
+  },
+  name: "Auth",
+});
+/*
+Example: const { dispatch } = props;
+dispatch({ type: "LOGOUT" });
+*/
+```

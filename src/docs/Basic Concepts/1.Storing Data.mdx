@@ -1,0 +1,206 @@
+---
+name: 2.1 Storing Data
+route: /docs/basic-concepts/storing-data
+parent: Documentation
+menu: 2. Basic Concepts
+---
+
+# Storing Data
+
+## # storing data automatically by calling api
+
+        Note:
+     -Data will be stored automatically in the reducer and also it handles all the states..such as error,infinte,loader..etc
+
+```js
+const BASE_URL = "https://example.com/";
+
+const DEMO_API_CONFIGURATION = {
+  url: `${BASE_URL}user/`,
+  method: "GET",
+  responseStatusCode: [900],
+  responseStatusCodeKey: "code",
+  responseDataKey: "data",
+  responseMessageKey: "status",
+  errorMessageKey: "error",
+};
+
+DEMO_API_CONFIGURATION_CALL();
+```
+
+## # sending query parameters to the api
+
+      Note:
+      -No need to worry about appending query.
+      -Its more simpler just pass the object in the query parameter that will append query in the url.
+      -And also passing params is simpler.
+
+##
+
+     Note:
+     -If you need to pass params in the url.
+     -Then you have to change the url to function to receive params.just like give below.
+
+```js
+const BASE_URL = "https://example.com/";
+
+const DEMO_API_CONFIGURATION = {
+  url: ({ id }) => `${BASE_URL}user/${id}`,
+  method: "GET",
+  responseStatusCode: [900],
+  responseStatusCodeKey: "code",
+  responseDataKey: "data",
+  responseMessageKey: "status",
+  errorMessageKey: "error",
+};
+
+DEMO_API_CONFIGURATION_CALL({
+  request: {
+    params: { id: 1 },
+    query: { skip: 10, age: [20, 20] },
+    payload: { age: 20 }, // for post calls
+    paramsSerializer: { arrayFormat: "bracket" }, //default: none - refer query-string npm package
+  },
+});
+```
+
+## # Callbacks for handling success or failure
+
+      Note:
+      -Callback are another helper function which handles errors, success, cancel..etc
+
+```js
+const BASE_URL = "https://example.com/";
+
+const DEMO_API_CONFIGURATION = {
+  url: `${BASE_URL}user/${id}`,
+  method: "GET",
+  responseStatusCode: [900],
+  responseStatusCodeKey: "code",
+  responseDataKey: "data",
+  responseMessageKey: "status",
+  errorMessageKey: "error",
+};
+
+const responseErrorParser = (data) =>
+  (Array.isArray(data) &&
+    data.reduce((acc, curr) => {
+      const [key, message] = Object.entries(curr)[0];
+      const payloadKey = key.split(",")[1];
+      return {
+        ...acc,
+        [payloadKey]: message,
+      };
+    }, {})) ||
+  {};
+
+DEMO_API_CONFIGURATION_CALL({
+  request: {
+    params: { id: 1 },
+    query: { skip: 10, age: [20, 20] },
+    paramsSerializer: { arrayFormat: "bracket" }, //default: none - refer query-string npm package
+    axiosConfig: {
+      responseType: "application/json",
+    },
+  },
+  callback: {
+    successCallback: ({ res, data, message, status }) => {
+      // handle toast or call any other api
+    },
+    errorCallback: ({
+      error,
+      errorData: responseErrorParser,
+      message,
+      status,
+      errors,
+    }) => {
+      // handle toast or call any other api
+    },
+    finalCallback: () => {
+      // this will get triggers for both api success or failure
+    },
+  },
+});
+```
+
+### **# Things to Remember**
+
+    1. Every actions has four keys they are tasks or task,request,callback,filter
+    2. tasks - for handling multiple tasks (you will find later in this documentation)
+    3. task - for handling single task (you will find later in this documentation)
+    4. request - for api request.It supports 5 keys they are query,params,payload,axiosConfig,    paramsSerializer.
+    5. filter - for handling different kind of data in same api (you will find later in this documentation)
+    6. callback - use for handling success or failure
+    7. Either you can use task or tasks,cannot use both at the same time.
+    8. If you use both tasks will be taken as priority.
+
+## # Manually storing data by calling custom task
+
+     Note:
+       - Don't worry about terms Manually,Automatically, its just the common word we used in the real world.
+       - The way how it stores or handles data i specified as manually, automatically thats it.You will get used to it.
+
+##
+
+    Note:
+       - Automatically -> It will handle api calls and stores data and also handles all the errors, success, loaders...etc
+
+##
+
+    Note:
+        - Manually -> It will slight different instead of api calls we are manually storing or updating data.
+        - This util function will help you update data in particular reducer.
+        - Also useful for doing various tasks without calling api
+
+```js
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Data-Handler",
+    response: {
+      data: {
+        commet: "This handler will help you to store data",
+        name: "Example",
+        age: 20,
+      },
+    },
+  },
+});
+```
+
+### # Things to Remember
+
+      - Handlers are most important util for manupulating data and also for managing data in the reducer
+     - There are almost 7 build in handlers are available (You will find later in this documentation)
+     - Also if you want can create a own custom handler for executing your task
+
+## # Getting Data from store
+
+      Note:
+      - We are almost done with basic setup, api calls, storing data...etc.
+      - Now the main things we have to retrieve the data from the reducer.
+      - Don't Worry that is very much simpler than other task.
+
+##
+
+```js
+import { useMemo } from "react";
+import { useQuery } from "react-boilerplate-redux-saga-hoc";
+const {
+  Auth_hoc: {
+    reducerName,
+    reducerConstants: { DEMO_API_CONFIGURATION },
+  },
+} = props;
+
+const { loader, data, lastUpdated, isInfinite, infiniteEnd } = useQuery(
+  reducerName,
+  DEMO_API_CONFIGURATION
+);
+```
+
+Next - [Updating Data](/docs/basic-concepts/updating-data)

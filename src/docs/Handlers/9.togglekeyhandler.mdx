@@ -1,0 +1,132 @@
+---
+name: 3.1.0 Toggle Key Handler
+route: /docs/handlers/toggle-key-handler
+parent: Documentation
+menu: 3. Handlers
+---
+
+# Toggle Key Handler
+
+## # Toggle Key Handler without filter
+
+```js
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Toggle-Key-Handler",
+    toggleKey: ["status"],
+  },
+});
+```
+
+## # Toggle Key Handler with filter
+
+```js
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Toggle-Key-Handler",
+    toggleKey: ["status"],
+  },
+  filter: ["name"],
+});
+```
+
+## # Toggle Key Handler with Multi-filter
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Toggle-Key-Handler",,
+    toggleKey: ['status']
+  },
+  filter: [["filter-1"], ["filter-2"], ["filter-2"]],
+});
+```
+
+## # Things to Remember
+
+     -Adding multiple filters will create multiple copy of the same ##.
+    -It will helps to handle different types of ## in same api..such as variable kind of filters.
+
+## # Toggle Key Handler Function - Api
+
+        Important:
+    - The code below are the built in handler function.
+    - Don't copy and paste this handler, it is already available with this hoc.
+    - You will learn how to create your own custom handler in below.
+    - If you want to customize this handler you can do it.
+
+```js
+/* eslint-disable */
+import { updateIn, newObject, generateTimeStamp } from "../helpers";
+
+const toggleData = (obj, keyArray) =>
+  Object.keys(obj).reduce(
+    (acc, curr) => ({
+      ...acc,
+      [curr]: keyArray.includes(curr) ? !obj[curr] : obj[curr],
+    }),
+    {}
+  );
+export const toggleKeyHandler = ({
+  task: { key, id, toggleKey = [], subKey = [] } = {},
+  callback: { updateCallback } = {},
+  successData = {},
+}) => ({ data = {} } = {}) => ({
+  data:
+    subKey.length > 0
+      ? updateIn(
+          {
+            ...data,
+            ...successData,
+            [subKey[0]]: data[subKey[0]],
+          },
+          subKey,
+          (_Data) =>
+            updateCallback
+              ? updateCallback(_Data, successData) || _Data
+              : (!Array.isArray(_Data) && toggleData(_Data, toggleKey)) ||
+                (Array.isArray(id) &&
+                  _Data.reduce(
+                    (acc, curr) =>
+                      id.includes(curr[key])
+                        ? acc.concat([toggleData(curr, toggleKey)])
+                        : acc.concat([curr]),
+                    []
+                  )) ||
+                _Data.map((_data) =>
+                  _data[key] === id ? toggleData(_data, toggleKey) : _data
+                )
+        )
+      : updateCallback
+      ? updateCallback(data, successData) || data
+      : (!Array.isArray(data) && toggleData(data, toggleKey)) ||
+        (Array.isArray(id) &&
+          data.reduce(
+            (acc, curr) =>
+              id.includes(curr[key])
+                ? acc.concat([toggleData(curr, toggleKey)])
+                : acc.concat([curr]),
+            []
+          )) ||
+        data.map((_data) =>
+          _data[key] === id ? toggleData(_data, toggleKey) : _data
+        ),
+  lastUpdated: generateTimeStamp(),
+  isError: false,
+});
+```

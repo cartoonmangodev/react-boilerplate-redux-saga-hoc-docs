@@ -1,0 +1,121 @@
+---
+name: 3.0.2 Data Handler
+route: /docs/handlers/data-handler
+parent: Documentation
+menu: 3. Handlers
+---
+
+# Data Handler
+
+## # Data Handler without filter
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Data-Handler",
+  },
+});
+```
+
+## # Data Handler with filter
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Data-Handler",
+  },
+  filter: ["name"],
+});
+```
+
+## # Data Handler with Multi-filter
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Data-Handler",
+  },
+  filter: [["filter-1"], ["filter-2"], ["filter-2"]],
+});
+```
+
+## # Things to Remember
+
+     -Adding multiple filters will create multiple copy of the same data.
+    -It will helps to handle different types of data in same api..such as variable kind of filters.
+
+     Note:
+     -Data-handler is default handler.
+     -No need specify the handler if you want to execute a data  handler task.
+
+## # Data Handler Function - Api
+
+        Important:
+    - The code below are the built in handler function.
+    - Don't copy and paste this handler, it is already available with this hoc.
+    - You will learn how to create your own custom handler in below.
+    - If you want to customize this handler you can do it.
+
+```javascript {.line-numbers}
+import {
+  generateTimeStamp,
+  updateIn,
+  getIn,
+  Safe,
+} from "react-boilerplate-redux-saga-hoc";
+
+const _checkIsNotObject = (data) =>
+  Object.prototype.toString.call(data) !== "[object Object]";
+
+export const dataHandler = ({
+  task: { clearData, subKey = [] } = {},
+  callback: { updateCallback } = {},
+  successData = {},
+}) => ({ data: oldData = {} } = {}) => ({
+  data: (() => {
+    if (subKey.length > 0) {
+      const _oldCopyData = {
+        ...oldData,
+        ...successData,
+        [subKey[0]]: oldData[subKey[0]],
+      };
+      return updateIn(_oldCopyData, subKey, (_oldData) => {
+        if (clearData) return Safe(successData, `.${subKey.join(".")}`);
+        return updateCallback
+          ? updateCallback(_oldData, Safe(successData, `.${subKey.join(".")}`))
+          : _checkIsNotObject(Safe(successData, `.${subKey.join(".")}`)) ||
+            _checkIsNotObject(Safe(_oldData, `.${subKey.join(".")}`))
+          ? Safe(successData, `.${subKey.join(".")}`)
+          : newObject(_oldData, Safe(successData, `.${subKey.join(".")}`));
+      });
+    }
+    return updateCallback
+      ? updateCallback(oldData, successData)
+      : _checkIsNotObject(successData) ||
+        _checkIsNotObject(oldData) ||
+        clearData
+      ? successData
+      : newObject(oldData, successData);
+  })(),
+  error: false,
+  lastUpdated: generateTimeStamp(),
+  isInfinite: undefined,
+  infiniteEnd: undefined,
+  isError: false,
+});
+```

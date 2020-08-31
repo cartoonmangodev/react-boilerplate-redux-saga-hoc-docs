@@ -1,0 +1,1136 @@
+---
+name: 5. Examples
+route: /docs/examples
+---
+
+# Basic Example
+
+## # creating config file
+
+```js
+/* config.js */
+import { HOC as HocConfigure } from "react-boilerplate-redux-saga-hoc";
+
+const HOC = HocConfigure({
+  handlers: [],
+  useHocHook: true,
+});
+
+const TEST_GET_API =
+  "https://jsonplaceholder.typicode.com/posts/"; /* Default method GET */
+
+const TEST_GET_BY_ID_API = ({ id }) =>
+  `https://jsonplaceholder.typicode.com/posts/${id}`; /* Default method GET */
+
+const TEST_POSTS_API = {
+  url: "https://jsonplaceholder.typicode.com/posts/",
+  method: "POST",
+};
+
+const TEST_WITH_CONFIG_API = {
+  url: "https://jsonplaceholder.typicode.com/posts/",
+  method: "GET",
+  responseStatusCode: [900] /* optional */,
+  responseStatusCodeKey: "code" /* optional */,
+  responseDataKey: "data" /* optional */,
+  responseMessageKey: "message" /* optional */,
+};
+const HOC = HocConfigure({ handlers: [] });
+const useAuthHoc = HOC({
+  initialState: {
+    profile: {},
+  },
+  useHook: true /* This will avoid unwanted rendering on every state changes */,
+  dontReset: {
+    TEST_GET_API /* If you pass anything on don't reset it wont reset the paricular state on setting to reset */,
+  },
+  apiEndPoints: { TEST_GET_API, TEST_POSTS_API, TEST_WITH_CONFIG_API },
+  constantReducer: ({ type, state, resetState }) => {
+    /* For handling custom action */
+    if (type === "logout") return resetState;
+    return state;
+  },
+  name: "Auth" /* Reducer name */,
+});
+
+export { useAuthHoc };
+```
+
+## # connecting hoc to component and making api calls
+
+```js
+/* basic-example.js */
+import React, { useEffect } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_API },
+    reducerName,
+    actions: { TEST_GET_API_CALL, TEST_GET_API_CANCEL },
+  } = useAuthHoc();
+
+  /* useQuery hook for getting data from the reducer */
+
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_API]);
+
+  useEffect(() => {
+    TEST_GET_API_CALL();
+    return () => TEST_GET_API_CANCEL(); /* for cancelling api on unmounting */
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+
+export default basicExample;
+/*
+   export default compose(AuthHoc)(basicExample);
+   can connect this hoc without using hook by disabling useHocHook to false in Hoc Configure (./config.js)
+    const HOC = HocConfigure({
+      handlers: [],
+      useHocHook: false, // default false
+    });
+*/
+```
+
+## # using useQuery hook in different ways
+
+```js
+/* accessing multiple data  at single query */
+const [test_data, test, test_deep, testGetApi] = useQuery(
+  reducerName /* can pass any reducer key such as 'Auth' , 'router' , ..etc*/,
+  [
+    {
+      key: TEST_GET_API,
+      name: "test",
+      initialLoaderState: true,
+    },
+    {
+      key: TEST_GET_API,
+      query: ".data[0]",
+      initialLoaderState: false,
+    },
+    {
+      key: TEST_GET_API,
+      query: ".data",
+      initialLoaderState: false,
+      default: [], // Default for data key it also check's type of data..if type is object return [].Don't pass if you dont want to type check
+    },
+    TEST_GET_API,
+  ]
+);
+
+/* query can be used in different ways based on your requirement */
+
+const [data, loader] = useQuery(
+  reducerName, // can pass any reducer key such as 'Auth' , 'router' , ..etc
+  TEST_GET_API,
+  [
+    {
+      query: ".data[0]",
+      default: [],
+    },
+    {
+      query: ".loader",
+      default: false,
+    },
+  ]
+);
+
+/* pass array of string instead of object */
+
+const [
+  { loader, data, lastUpdated, isError, error, toast },
+] = useQuery(reducerName, [TEST_GET_API]);
+
+/* Pass an object instead of array */
+const data = useQuery(reducerName, {
+  key: TEST_GET_API,
+  default: [],
+  requiredKey: ["loader", "data", "lastUpdated"],
+});
+
+/* pass a string insted of array */
+const { loader, data, lastUpdated, isError, error, toast } = useQuery(
+  reducerName,
+  TEST_GET_API
+);
+
+/* Pass a config as a third parameter its optional */
+const data = useQuery(reducerName, TEST_GET_API, {
+  query: ".data",
+  default: [],
+});
+
+/* for getting whole reducer data */
+const data = useQuery(); // Don't use this use this until its required it will render the component every time reducer change
+const data = useQuery(reducerName); // Don't use this until its required it will render the component every time reducer data change
+```
+
+## # calling api
+
+```js
+/* basic-example.js */
+import React, { useEffect } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_API },
+    reducerName,
+    actions: { TEST_GET_API_CALL, TEST_GET_API_CANCEL },
+  } = useAuthHoc();
+
+  /* useQuery hook for getting data from the reducer */
+
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_API]);
+
+  useEffect(() => {
+    TEST_GET_API_CALL();
+    return () => TEST_GET_API_CANCEL(); /* for cancelling api on unmounting */
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # calling api by passing params
+
+```js
+/* basic-example.js */
+import React, { useEffect } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_GET_BY_ID_API_CALL, TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+
+  /* useQuery hook for getting data from the reducer */
+
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_GET_BY_ID_API_CALL({
+      request: {
+        id: 1,
+      },
+    });
+    return () => TEST_GET_API_CANCEL(); /* for cancelling api on unmounting */
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # mutate reducer value
+
+```js
+/* basic-example.js */
+import React, { useEffect } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_GET_BY_ID_API_CALL, TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+  /* useQuery hook for getting data from the reducer */
+  const mutate = useMutation(reducerName);
+  /* useMutation hook for modifying data in the reducer */
+
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_GET_BY_ID_API_CALL({
+      request: {
+        params: { id: 1 },
+      },
+    });
+    setTimeout(() => {
+      mutate({
+        key: TEST_GET_BY_ID_API,
+        value: {
+          data: [{ title: "movie" }],
+        },
+      });
+    }, 3000);
+    return () => TEST_GET_API_CANCEL(); /* for cancelling api on unmounting */
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # passing query params
+
+```js
+/* basic-example.js */
+import React, { useEffect } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_GET_BY_ID_API_CALL, TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+  /* useQuery hook for getting data from the reducer */
+
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_GET_BY_ID_API_CALL({
+      request: {
+        query: { id: 1 },
+      },
+    });
+    return () => TEST_GET_API_CANCEL(); /* for cancelling api on unmounting */
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # Cancelling Api call or polling
+
+```js
+/* basic-example.js */
+import React, { useEffect } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    actions: { TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+
+  useEffect(() => {
+    return () => TEST_GET_API_CANCEL(); /* for cancelling api on unmounting */
+  }, []);
+
+  return <div />;
+}
+```
+
+## # accessing data using useQuery
+
+```js
+/* basic-example.js */
+import React, { useEffect } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_GET_BY_ID_API_CALL, TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+  /* useQuery hook for getting data from the reducer */
+
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_GET_BY_ID_API_CALL({
+      request: {
+        query: { id: 1 },
+      },
+    });
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # using data-handler for storing data
+
+```js
+/* basic-example.js */
+import React, { useEffect } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_GET_BY_ID_API_CALL, TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+  /* useQuery hook for getting data from the reducer */
+
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_GET_BY_ID_API_CALL({
+      task: {
+        name: "Data-Handler",
+      },
+      request: {
+        query: { id: 1 },
+      },
+    });
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # using Infinite-handler for infinite scrolling
+
+```js
+/* basic-example.js */
+import React, { useEffect } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_GET_BY_ID_API_CALL, TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+  /* useQuery hook for getting data from the reducer */
+
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_GET_BY_ID_API_CALL({
+      task: {
+        name: "Infinite-handler",
+        isAppendTop: false, // default will be false
+      },
+    });
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # clearing old Data before storing new Data
+
+```js
+/* basic-example.js */
+import React, { useEffect, useState } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_GET_BY_ID_API_CALL, TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+  /* useQuery hook for getting data from the reducer */
+  const [page, setPage] = useState(1);
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_GET_BY_ID_API_CALL({
+      task: {
+        name: "Infinite-handler",
+        clearData: page === 1 ? true : false,
+      },
+    });
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # storing data in deep keys using subKey
+
+```js
+/* basic-example.js */
+import React, { useEffect, useState } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_GET_BY_ID_API_CALL, TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+  /* useQuery hook for getting data from the reducer */
+  const [page, setPage] = useState(1);
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_GET_BY_ID_API_CALL({
+      task: {
+        name: "Infinite-handler",
+        subKey: ["items"], // it will store the data inside items in the reducer
+        clearData: page === 1 ? true : false,
+      },
+    });
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # Deleting paricular data in an array using Delete-Handler
+
+```js
+/* basic-example.js */
+import React, { useEffect, useState } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_GET_BY_ID_API_CALL, TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+  /* useQuery hook for getting data from the reducer */
+  const [page, setPage] = useState(1);
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_GET_BY_ID_API_CALL({
+      task: {
+        name: "Delete-Handler",
+        id: [2, 3], // delete items id
+        key: "id",
+      },
+    });
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # Deleting paricular key in an array of objects using Delete-Key-Handler
+
+```js
+/* basic-example.js */
+import React, { useEffect, useState } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_GET_BY_ID_API_CALL, TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+  /* useQuery hook for getting data from the reducer */
+  const [page, setPage] = useState(1);
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_GET_BY_ID_API_CALL({
+      task: {
+        name: "Delete-Key-Handler",
+        id: [2, 3], // delete items id
+        key: "id",
+        deleteKey: ["name", ["team", "name"]],
+      },
+    });
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # Update paricular object in an array of objects using update handler
+
+```js
+/* basic-example.js */
+import React, { useEffect, useState } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_GET_BY_ID_API_CALL, TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+  /* useQuery hook for getting data from the reducer */
+  const [page, setPage] = useState(1);
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_GET_BY_ID_API_CALL({
+      task: {
+        name: "Update-Handler",
+        id: [2, 3], // delete items id
+        key: "id",
+      },
+    });
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # Update paricular key in an array of objects using update key handler
+
+```js
+/* basic-example.js */
+import React, { useEffect, useState } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_GET_BY_ID_API_CALL, TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+  /* useQuery hook for getting data from the reducer */
+  const [page, setPage] = useState(1);
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_GET_BY_ID_API_CALL({
+      task: {
+        name: "Update-Key-Handler",
+        id: [2, 3],
+        key: "id",
+        updateKey: ["order_status"],
+        values: [{ order_status: "delivered" }],
+      },
+    });
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # Update paricular object in an array of objects using update handler
+
+```js
+/* basic-example.js */
+import React, { useEffect, useState } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_GET_BY_ID_API_CALL, TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+  /* useQuery hook for getting data from the reducer */
+  const [page, setPage] = useState(1);
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_GET_BY_ID_API_CALL({
+      task: {
+        name: "Update-Handler",
+        id: [2, 3], // delete items id
+        key: "id",
+      },
+    });
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # Polling Data
+
+```js
+/* basic-example.js */
+import React, { useEffect, useState } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_GET_BY_ID_API_CALL, TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+  /* useQuery hook for getting data from the reducer */
+  const [page, setPage] = useState(1);
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_GET_BY_ID_API_CALL({
+      request: {
+        polling: true,
+        delay: 8000, // default is 8000 milliseconds
+        pollingCount: 30, // max count default will be 'unlimited' dont pass if you dont want to stop polling
+      },
+      callback: {
+        pollingCallback({ count, response, status, message }) {
+          // this will pass the query parameters to the next call
+          if (count > 2)
+            return {
+              query: {
+                status: "ongoing",
+              },
+            };
+          else if (status === 902) {
+            return false; // this will stop polling
+          }
+        },
+      },
+    });
+    return () => TEST_GET_BY_ID_API_CANCEL(); // this stop the polling on unmount
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # Modifying task on success
+
+```js
+/* basic-example.js */
+import React, { useEffect, useState } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_GET_BY_ID_API_CALL, TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+  /* useQuery hook for getting data from the reducer */
+  const [page, setPage] = useState(1);
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_GET_BY_ID_API_CALL({
+      task: "Infinite-Handler",
+      callback: {
+        successCallback({ status, data }) {
+          if (status === 902)
+            return {
+              task: {
+                name: "Data-Handler",
+                response: {
+                  data: data.concat([{ id: 400 }]),
+                },
+              },
+            };
+        },
+      },
+    });
+    return () => TEST_GET_BY_ID_API_CANCEL(); // this stop the polling on unmount
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # on success callback
+
+```js
+/* basic-example.js */
+import React, { useEffect, useState } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_GET_BY_ID_API_CALL, TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+  /* useQuery hook for getting data from the reducer */
+  const [page, setPage] = useState(1);
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_GET_BY_ID_API_CALL({
+      task: "Infinite-Handler",
+      callback: {
+        successCallback({ status, data }) {
+          if (status === 902) toast("Successfully updated");
+        },
+      },
+    });
+    return () => TEST_GET_BY_ID_API_CANCEL(); // this stop the polling on unmount
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # on Error callback
+
+```js
+/* basic-example.js */
+import React, { useEffect, useState } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_GET_BY_ID_API_CALL, TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+  /* useQuery hook for getting data from the reducer */
+  const [page, setPage] = useState(1);
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_GET_BY_ID_API_CALL({
+      task: "Infinite-Handler",
+      callback: {
+        errorCallback({ status, data }) {
+          if (status === 902) toast("Error while updating");
+        },
+      },
+    });
+    return () => TEST_GET_BY_ID_API_CANCEL(); // this stop the polling on unmount
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # update callback
+
+```js
+/* basic-example.js */
+import React, { useEffect, useState } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_GET_BY_ID_API_CALL, TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+  /* useQuery hook for getting data from the reducer */
+  const [page, setPage] = useState(1);
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_GET_BY_ID_API_CALL({
+      task: "Infinite-Handler",
+      callback: {
+        updateCallback(previousData, successData) {
+          return previousData.concat(successData);
+        },
+      },
+    });
+    return () => TEST_GET_BY_ID_API_CANCEL(); // this stop the polling on unmount
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # final callback for handling loaders,cancel
+
+```js
+/* basic-example.js */
+import React, { useEffect, useState } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_GET_BY_ID_API_CALL, TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+  const [loader, setLoader] = useState(true);
+  /* useQuery hook for getting data from the reducer */
+  const [page, setPage] = useState(1);
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_GET_BY_ID_API_CALL({
+      callback: {
+        finalCallback({ Cancelled }) {
+          if (Cancelled) toast("Update cancelled");
+          setLoader(false);
+        },
+      },
+    });
+    return () => TEST_GET_BY_ID_API_CANCEL(); // this stop the polling on unmount
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # Updating other reducer by calling api - (updateDataReducerKey)
+
+```js
+/* basic-example.js */
+import React, { useEffect, useState } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_PUT_API_CALL, TEST_PUT_API_CANCEL },
+  } = useAuthHoc();
+  const [loader, setLoader] = useState(true);
+  /* useQuery hook for getting data from the reducer */
+  const [page, setPage] = useState(1);
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_PUT_API_CALL({
+      task: {
+        name:
+          orderStatus[order_status] === "delivered"
+            ? "Delete-Handler"
+            : "Update-Key-Handler",
+        id: [id],
+        key: "id",
+        updateKey: ["order_status"],
+        values: [{ order_status: orderStatus[order_status] }],
+      },
+      updateDataReducerKey: TEST_GET_BY_ID_API,
+      request: {
+        payload: { order_status: orderStatus[order_status] },
+        params: { orderId: id },
+      },
+      callback: {
+        successCallback() {
+          setShowModal(false);
+        },
+      },
+    });
+    return () => TEST_GET_BY_ID_API_CANCEL(); // this stop the polling on unmount
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # Updating other reducer by calling api using customTask
+
+```js
+/* basic-example.js */
+import React, { useEffect, useState } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+  commonConstants,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: {
+      TEST_PUT_API_CALL,
+      TEST_PUT_API_CANCEL,
+      TEST_GET_BY_ID_API_CUSTOM_TASK,
+    },
+  } = useAuthHoc();
+  const [loader, setLoader] = useState(true);
+  const { ON_SUCCESS } = commonConstants;
+  /* useQuery hook for getting data from the reducer */
+  const [page, setPage] = useState(1);
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_PUT_API_CALL({
+      request: {
+        payload: { order_status: orderStatus[order_status] },
+        params: { orderId: id },
+      },
+      callback: {
+        successCallback() {
+          TEST_GET_BY_ID_API_CUSTOM_TASK(ON_SUCCESS, {
+            task: {
+              name:
+                orderStatus[order_status] === "delivered"
+                  ? "Delete-Handler"
+                  : "Update-Key-Handler",
+              id: [id],
+              key: "id",
+              updateKey: ["order_status"],
+              values: [{ order_status: orderStatus[order_status] }],
+            },
+          });
+          setShowModal(false);
+        },
+      },
+    });
+    return () => TEST_GET_BY_ID_API_CANCEL(); // this stop the polling on unmount
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```

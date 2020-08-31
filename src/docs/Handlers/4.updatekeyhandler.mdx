@@ -1,0 +1,244 @@
+---
+name: 3.0.5 Update Key Handler
+route: /docs/handlers/update-key-handler
+parent: Documentation
+menu: 3. Handlers
+---
+
+# Update Key Handler
+
+      Note:
+      - Update Key handler is slightly different from update handler, but it will update only particular key in an object or an array of object
+
+## # Update Key Handler without filter
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Update-Key-Handler",
+    subKey: ["data"],
+    id: [1, 2],
+    key: "id",
+    updateKey: ["age"],
+  },
+});
+```
+
+## # Update Key Handler with filter
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Update-Key-Handler",
+    subKey: ["data"],
+    id: [1, 2],
+    key: "id",
+    updateKey: ["age"],
+  },
+  filter: ["name"],
+});
+```
+
+## # Update Key Handler with Multi-filter
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Update-Key-Handler",
+    subKey: ["data"],
+    id: [1, 2],
+    key: "id",
+    updateKey: ["age"],
+  },
+  filter: [["filter-1"], ["filter-2"], ["filter-2"]],
+});
+```
+
+## # Update Key Handler with Subkey
+
+    Note:
+    - sub key for handling sub level of data in an object
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Update-Key-Handler",
+    subKey: ["data"],
+    id: [1, 2],
+    key: "id",
+    updateKey: ["age"],
+  },
+  filter: [["filter-1"], ["filter-2"], ["filter-2"]],
+});
+```
+
+## # Update Key Handler Function - Api
+
+        Important:
+    - The code below are the built in handler function.
+    - Don't copy and paste this handler, it is already available with this hoc.
+    - You will learn how to create your own custom handler in below.
+    - If you want to customize this handler you can do it.
+
+```javascript {.line-numbers}
+import {
+  generateTimeStamp,
+  updateIn,
+  getIn,
+  Safe,
+} from "react-boilerplate-redux-saga-hoc";
+
+const updateData = (data, successData, updateCallback, updateKey) => {
+  if (updateCallback) return updateCallback(data, successData) || data;
+  if (
+    typeof successData === "object" &&
+    !Array.isArray(successData) &&
+    typeof data === "object" &&
+    !Array.isArray(data)
+  ) {
+    return !updateKey
+      ? data
+      : updateKey.reduce((acc, key) => {
+          if (Array.isArray(key) && key.length > 0) {
+            return updateIn(acc, key, (_data) =>
+              Safe(successData, `.${key.join(".")}`)
+            );
+          }
+          return {
+            ...acc,
+            [key]: successData[key],
+          };
+        }, data);
+  }
+  return successData;
+};
+
+export const updateKeyHandler = ({
+  task: { key, id, subKey = [], values = {}, updateKey = [] } = {},
+  callback: { updateCallback } = {},
+  successData = {},
+}) => ({ data = [] } = {}) => ({
+  data:
+    subKey.length > 0
+      ? updateIn(
+          {
+            ...data,
+            ...successData,
+            [subKey[0]]: data[subKey[0]],
+          },
+          subKey,
+          (_Data) =>
+            (() => {
+              let index = -1;
+              const _values = Array.isArray(values);
+              /**  update data if old data is object */
+              if (!Array.isArray(_Data))
+                return updateData(
+                  _Data,
+                  Safe(successData, `.${subKey.join(".")}`),
+                  updateCallback,
+                  updateKey
+                );
+              else if (Array.isArray(id) && key && Array.isArray(_Data))
+                return _Data.reduce(
+                  (acc, curr = {}) =>
+                    id.includes(curr[key])
+                      ? (() => {
+                          index = index + 1;
+                          return acc.concat([
+                            updateData(
+                              curr,
+                              values[_values ? index : curr[key]] || curr,
+                              updateCallback,
+                              updateKey
+                            ),
+                          ]);
+                        })()
+                      : acc.concat([curr]),
+                  []
+                );
+              else if ((id === 0 || id) && key)
+                return _Data.map((_data) =>
+                  _data[key] === id
+                    ? (() => {
+                        index = index + 1;
+                        return updateData(
+                          _data,
+                          values[_values ? index : curr[key]] || _data,
+                          updateCallback,
+                          updateKey
+                        );
+                      })()
+                    : _data
+                );
+              return updateData(
+                _Data,
+                Safe(successData, `.${subKey.join(".")}`),
+                updateCallback,
+                updateKey
+              );
+            })()
+        )
+      : (() => {
+          let index = -1;
+          const _values = Array.isArray(values);
+          if (!Array.isArray(data))
+            return updateData(data, successData, updateCallback, updateKey);
+          else if (Array.isArray(id) && key)
+            return data.reduce(
+              (acc, curr = {}) =>
+                id.includes(curr[key])
+                  ? (() => {
+                      index = index + 1;
+                      return acc.concat([
+                        updateData(
+                          curr,
+                          values[_values ? index : curr[key]] || curr,
+                          updateCallback,
+                          updateKey
+                        ),
+                      ]);
+                    })()
+                  : acc.concat([curr]),
+              []
+            );
+          else if ((id === 0 || id) && key)
+            return data.map((_data) =>
+              _data[key] === id
+                ? (() => {
+                    index = index + 1;
+                    return updateData(
+                      _data,
+                      values[_values ? index : curr[key]] || _data,
+                      updateCallback,
+                      updateKey
+                    );
+                  })()
+                : _data
+            );
+          return updateData(data, successData, updateCallback, updateKey);
+        })(),
+  lastUpdated: generateTimeStamp(),
+  isError: false,
+});
+```

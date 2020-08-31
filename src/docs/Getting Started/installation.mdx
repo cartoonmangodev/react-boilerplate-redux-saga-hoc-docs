@@ -1,0 +1,760 @@
+---
+name: 1.3 Installation Setup
+route: /docs/getting-started/installation-setup
+parent: Documentation
+menu: 1. Getting Started
+---
+
+# Installation
+
+## # Installing on create-react-app scafolding
+
+    Note:
+    Please make sure to install required dependencies.
+
+```bash
+
+npm install redux-saga@0.16.2 react-redux react-boilerplate-redux-saga-hoc
+
+```
+
+If you are using yarn:
+
+```bash
+
+yarn  add redux-saga@0.16.2 react-redux react-boilerplate-redux-saga-hoc
+
+```
+
+```js
+/* index.js */
+import React from "react";
+import ReactDOM from "react-dom";
+import { Provider } from "react-redux";
+import { store as configureStore } from "react-boilerplate-redux-saga-hoc";
+import "./index.css";
+import App from "./App";
+import * as serviceWorker from "./serviceWorker";
+
+const initialState = {};
+const middleware = [];
+const store = configureStore(initialState, middleware);
+
+ReactDOM.render(
+  <React.StrictMode>
+    <Provider store={store}>
+      <App />
+    </Provider>
+  </React.StrictMode>,
+  document.getElementById("root")
+);
+
+// If you want your app to work offline and load faster, you can change
+// unregister() to register() below. Note this comes with some pitfalls.
+// Learn more about service workers: https://bit.ly/CRA-PWA
+serviceWorker.unregister();
+```
+
+```js
+/** App.js **/
+
+import React from "react";
+import { HOC as HocConfigure } from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import logo from "./logo.svg";
+import "./App.css";
+const HOC = HocConfigure({
+  handlers: [],
+});
+const NewHoc = HOC({
+  initialState: {
+    profile: {},
+  },
+  dontReset: {
+    TEST_API: {},
+    TEST_SUB_API: {},
+  },
+  useHook: true,
+  apiEndPoints: {
+    TEST_API: {},
+    TEST_SUB_API: {},
+    REGISTER_API: {
+      url: `users/user-signup/`,
+      method: "POST",
+    },
+  },
+  constantReducer: ({ type, state }) => {
+    if (type === "NAME")
+      return {
+        ...state,
+        name: "NAME",
+      };
+    return state;
+  },
+  name: "NAME2",
+});
+const AuthHoc = HOC({
+  initialState: {
+    profile: {},
+  },
+  dontReset: {
+    TEST_API: {},
+  },
+  useHook: true,
+  apiEndPoints: {
+    TEST_API: {
+      url: "https://jsonplaceholder.typicode.com/posts/",
+      method: "GET",
+      responseStatusCode: [900],
+      responseStatusCodeKey: "code",
+      responseDataKey: "data",
+      responseMessageKey: "message",
+    },
+    TEST_SUB_API: {},
+    REGISTER_API: {
+      url: `users/user-signup/`,
+      method: "POST",
+    },
+  },
+  constantReducer: ({ type, state }) => {
+    if (type === "NAME")
+      return {
+        ...state,
+        name: "NAME",
+      };
+    return state;
+  },
+  name: "Auth",
+});
+function App(props) {
+  console.log(props);
+  React.useEffect(() => {
+    const {
+      Auth_hoc: {
+        actions: { TEST_API_CALL },
+      },
+    } = props;
+    TEST_API_CALL();
+  }, []);
+  return (
+    <div className="App">
+      <header className="App-header">
+        <img src={logo} className="App-logo" alt="logo" />
+        <p>
+          Edit <code>src/App.js</code> and save to reload.
+        </p>
+        <a
+          className="App-link"
+          href="https://reactjs.org"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Learn React
+        </a>
+      </header>
+    </div>
+  );
+}
+
+export default compose(NewHoc, AuthHoc)(App);
+```
+
+## # Installing on React-Boilerplate scafolding
+
+```bash
+
+npm install react-boilerplate-redux-saga-hoc
+
+```
+
+```js
+/**
+ * app.js
+ *
+ * This is the entry file for the application, only setup and boilerplate
+ * code.
+ */
+
+// Needed for redux-saga es6 generator support
+import "@babel/polyfill";
+
+// Import all the third party stuff
+import React from "react";
+import ReactDOM from "react-dom";
+import { Provider } from "react-redux";
+import { ConnectedRouter } from "connected-react-router";
+import { Router } from "react-router-dom";
+import FontFaceObserver from "fontfaceobserver";
+import history from "utils/history";
+import "sanitize.css/sanitize.css";
+
+// Import root app
+import App from "containers/App";
+
+// Import Language Provider
+import LanguageProvider from "containers/LanguageProvider";
+
+// Load the favicon and the .htaccess file
+import "!file-loader?name=[name].[ext]!./images/favicon.ico";
+import "file-loader?name=.htaccess!./.htaccess"; // eslint-disable-line import/extensions
+
+import configureStore from "./configureStore";
+
+// Import i18n messages
+import { translationMessages } from "./i18n";
+
+// Observe loading of Open Sans (to remove open sans, remove the <link> tag in
+// the index.html file and this observer)
+const openSansObserver = new FontFaceObserver("Open Sans", {});
+
+// When Open Sans is loaded, add a font-family using Open Sans to the body
+openSansObserver.load().then(() => {
+  document.body.classList.add("fontLoaded");
+});
+
+// Create redux store with history
+const initialState = {};
+const store = configureStore(initialState, history);
+const MOUNT_NODE = document.getElementById("app");
+
+const render = (messages) => {
+  ReactDOM.render(
+    <Provider store={store}>
+      <LanguageProvider messages={messages}>
+        <ConnectedRouter history={history}>
+          <Router history={history}>
+            <App />
+          </Router>
+        </ConnectedRouter>
+      </LanguageProvider>
+    </Provider>,
+    MOUNT_NODE
+  );
+};
+
+if (module.hot) {
+  // Hot reloadable React components and translation json files
+  // modules.hot.accept does not accept dynamic dependencies,
+  // have to be constants at compile-time
+  module.hot.accept(["./i18n", "containers/App"], () => {
+    ReactDOM.unmountComponentAtNode(MOUNT_NODE);
+    render(translationMessages);
+  });
+}
+
+// Chunked polyfill for browsers without Intl support
+if (!window.Intl) {
+  new Promise((resolve) => {
+    resolve(import("intl"));
+  })
+    .then(() =>
+      Promise.all([
+        import("intl/locale-data/jsonp/en.js"),
+        import("intl/locale-data/jsonp/de.js"),
+      ])
+    ) // eslint-disable-line prettier/prettier
+    .then(() => render(translationMessages))
+    .catch((err) => {
+      throw err;
+    });
+} else {
+  render(translationMessages);
+}
+
+// Install ServiceWorker and AppCache in the end since
+// it's not most important operation and if main code fails,
+// we do not want it installed
+if (process.env.NODE_ENV === "production") {
+  require("offline-plugin/runtime").install(); // eslint-disable-line global-require
+}
+```
+
+```js
+/**
+ *
+ * containers/App/index.js
+ *
+ * This component is the skeleton around the actual pages, and should only
+ * contain code that should be seen on all pages. (e.g. navigation bar)
+ */
+
+import React, { useEffect, useMemo } from "react";
+import { Helmet } from "react-helmet";
+import styled from "styled-components";
+import { Link } from "react-router-dom";
+import { Switch, Route } from "react-router-dom";
+import history from "utils/history";
+import {
+  HOC as HocConfigure,
+  commonConstants,
+} from "react-boilerplate-redux-saga-hoc";
+import HomePage from "containers/HomePage/Loadable";
+import FeaturePage from "containers/FeaturePage/Loadable";
+import NotFoundPage from "containers/NotFoundPage/Loadable";
+import Header from "components/Header";
+import Footer from "components/Footer";
+import createReducer from "../../reducers";
+import GlobalStyle from "../../global-styles";
+
+const AppWrapper = styled.div`
+  max-width: calc(768px + 16px * 2);
+  margin: 0 auto;
+  display: flex;
+  min-height: 100%;
+  padding: 0 16px;
+  flex-direction: column;
+`;
+const HOC = HocConfigure({
+  handlers: [{ name: "NAME" }],
+  createReducer,
+});
+const BASE_URL = "https://jsonplaceholder.typicode.com";
+const DEMO_GET_API = {
+  url: `${BASE_URL}/posts`,
+  method: "GET",
+  responseStatusCode: [900],
+  responseStatusCodeKey: "code",
+  responseDataKey: "data",
+  responseMessageKey: "status",
+  errorMessageKey: "error",
+};
+/*
+Note: If you want to pass params to the url such as id,type etc.change `${BASE_URL}/posts` to ({ id }) => `${BASE_URL}/posts/${id}`
+*/
+const DEMO_POST_API = {
+  url: ({ id }) => `${BASE_URL}/posts/${id}`,
+  method: "POST",
+  responseStatusCode: [900],
+  responseStatusCodeKey: "code",
+  responseDataKey: "data",
+  responseMessageKey: "status",
+  errorMessageKey: "error",
+};
+const DEMO_DELETE_API = {
+  url: ({ id }) => `${BASE_URL}/posts/${id}`,
+  method: "DELETE",
+  responseStatusCode: [900],
+  responseStatusCodeKey: "code",
+  responseDataKey: "data",
+  responseMessageKey: "status",
+  errorMessageKey: "error",
+};
+const DEMO_PUT_API = {
+  url: ({ id, type }) => `${BASE_URL}/posts/${id}/${type}`,
+  method: "PUT",
+  responseStatusCode: [900],
+  responseStatusCodeKey: "code",
+  responseDataKey: "data",
+  responseMessageKey: "status",
+  errorMessageKey: "error",
+};
+const AuthenticationHOC = HOC({
+  initialState: {
+    profile: {},
+  },
+  useHook: true,
+  apiEndPoints: {
+    DEMO_GET_API,
+    DEMO_POST_API,
+    DEMO_DELETE_API,
+    DEMO_PUT_API,
+  },
+  name: "Auth",
+});
+
+function App(props) {
+  return (
+    <AppWrapper>
+      <Helmet
+        titleTemplate="%s - React.js Boilerplate"
+        defaultTitle="React.js Boilerplate"
+      >
+        <meta name="description" content="A React.js Boilerplate application" />
+      </Helmet>
+      <Header />
+      <Switch>
+        <Route exact path="/" component={HomePage} />
+        <Route path="/features" component={FeaturePage} />
+        <Route path="" component={NotFoundPage} />
+      </Switch>
+      <Footer />
+      <GlobalStyle />
+    </AppWrapper>
+  );
+}
+export default AuthenticationHOC(App);
+```
+
+## # Installing on React-Native
+
+     Note:
+     Please make sure to install required dependencies.
+
+```bash
+
+npm install redux-saga@0.16.2 react-redux react-boilerplate-redux-saga-hoc
+
+```
+
+If you are using yarn:
+
+```bash
+
+yarn  add redux-saga@0.16.2 react-redux react-boilerplate-redux-saga-hoc
+
+```
+
+```js
+/**
+ * index.js
+ */
+import React from "react";
+import { AppRegistry } from "react-native";
+import { Provider } from "react-redux";
+import { store as configureStore } from "react-boilerplate-redux-saga-hoc";
+import App from "./App";
+import { name as appName } from "./app.json";
+
+const initialState = {};
+
+const store = configureStore(initialState);
+
+AppRegistry.registerComponent(appName, () => (props) => (
+  <Provider store={store}>
+    <App {...props} />
+  </Provider>
+));
+```
+
+```js
+/**
+ * Sample React Native App
+ * https://github.com/facebook/react-native
+ *
+ * @format
+ * @flow strict-local
+ */
+import { compose } from "redux";
+import React from "react";
+import {
+  SafeAreaView,
+  StyleSheet,
+  ScrollView,
+  View,
+  Text,
+  StatusBar,
+} from "react-native";
+import { HOC as HocConfigure } from "react-boilerplate-redux-saga-hoc";
+import {
+  Header,
+  LearnMoreLinks,
+  Colors,
+  DebugInstructions,
+  ReloadInstructions,
+} from "react-native/Libraries/NewAppScreen";
+const HOC = HocConfigure({
+  handlers: [{ name: "NAME" }],
+  isReactBoilerplate: false,
+});
+const NewHoc = HOC({
+  initialState: {
+    profile: {},
+  },
+  dontReset: {
+    TEST_API: {},
+    TEST_SUB_API: {},
+  },
+  useHook: true,
+  apiEndPoints: {
+    TEST_API: {},
+    TEST_SUB_API: {},
+    REGISTER_API: {
+      url: `users/user-signup/`,
+      method: "POST",
+    },
+  },
+  constantReducer: ({ type, state }) => {
+    if (type === "NAME")
+      return {
+        ...state,
+        name: "NAME",
+      };
+    return state;
+  },
+  name: "NAME2",
+});
+const AuthHoc = HOC({
+  initialState: {
+    profile: {},
+  },
+  dontReset: {
+    TEST_API: {},
+  },
+  useHook: true,
+  apiEndPoints: {
+    TEST_API: {
+      url: "https://jsonplaceholder.typicode.com/posts/",
+      method: "GET",
+      responseStatusCode: [900],
+      responseStatusCodeKey: "code",
+      responseDataKey: "data",
+      responseMessageKey: "message",
+    },
+    TEST_SUB_API: {},
+    REGISTER_API: {
+      url: `users/user-signup/`,
+      method: "POST",
+    },
+  },
+  constantReducer: ({ type, state }) => {
+    if (type === "NAME")
+      return {
+        ...state,
+        name: "NAME",
+      };
+    return state;
+  },
+  name: "Auth",
+});
+const App = (props) => {
+  console.log(props);
+  React.useEffect(() => {
+    const {
+      Auth_hoc: {
+        actions: { TEST_API_CALL },
+      },
+    } = props;
+    TEST_API_CALL();
+  }, []);
+  return (
+    <>
+      <StatusBar barStyle="dark-content" />
+    </>
+  );
+};
+
+export default compose(NewHoc, AuthHoc)(App);
+```
+
+## # Installing on Next-js
+
+    Note:
+    Please install redux-saga version 0.16.2.
+    This package does not support latest version on redux-saga.
+    Please make sure to install required dependencies.
+
+```bash
+
+npm install redux-saga@0.16.2  react-redux   react-boilerplate-redux-saga-hoc
+
+```
+
+If you are using yarn:
+
+```bash
+
+yarn  add redux-saga@0.16.2  react-redux  react-boilerplate-redux-saga-hoc
+
+```
+
+```js
+/* config.js */
+import { HOC as HocConfigure } from "react-boilerplate-redux-saga-hoc";
+
+const HOC = HocConfigure({ handlers: [], nextJS: true, useHook: true });
+
+const { saga: AuthSaga, reducer: AuthReducer, hoc: AuthenticationHOC } = HOC({
+  initialState: {
+    profile: {},
+  },
+  apiEndPoints: {
+    TEST_API: {
+      url: "https://jsonplaceholder.typicode.com/posts/",
+      method: "GET",
+      responseStatusCode: [900],
+      responseStatusCodeKey: "code",
+      responseDataKey: "data",
+      responseMessageKey: "message",
+    },
+    REGISTER_API: {
+      url: `users/user-signup/`,
+      method: "POST",
+    },
+  },
+  name: "Auth",
+});
+
+const { saga: DashSaga, reducer: DashReducer, hoc: DashHOC } = HOC({
+  initialState: {
+    profile: {},
+  },
+  apiEndPoints: {
+    TEST_API: {
+      url: "https://jsonplaceholder.typicode.com/posts/",
+      method: "GET",
+      responseStatusCode: [900],
+      responseStatusCodeKey: "code",
+      responseDataKey: "data",
+      responseMessageKey: "message",
+    },
+    REGISTER_API: {
+      url: `users/user-signup/`,
+      method: "POST",
+    },
+  },
+  name: "Dash",
+});
+
+const Store = createStore({
+  saga: [AuthSaga, DashSaga],
+  reducer: [AuthReducer, DashReducer],
+});
+
+export { AuthenticationHOC, DashHOC, Store };
+```
+
+```js
+/* pages/_app.js*/
+import React from "react";
+import App from "next/app";
+import { Provider } from "react-redux";
+import { withRedux, withReduxSaga } from "react-boilerplate-redux-saga-hoc";
+import { Store } from "./config.js";
+
+function MyApp({ Component, pageProps, store }) {
+  return (
+    <Provider store={store}>
+      <Component {...pageProps} />
+    </Provider>
+  );
+}
+
+MyApp.getInitialProps = async (appContext) => {
+  // calls page's `getInitialProps` and fills `appProps.pageProps`
+  const appProps = await App.getInitialProps(appContext);
+  return { ...appProps };
+};
+
+export default withRedux(Store)(withReduxSaga(MyApp));
+```
+
+```js
+/* _app.js */
+/* Hoc will use get initial props.  please add this in _app.js inorder to use hoc in ssr */
+import App from "next/app";
+
+MyApp.getInitialProps = async (appContext) => {
+  // calls page's `getInitialProps` and fills `appProps.pageProps`
+  const appProps = await App.getInitialProps(appContext);
+  return { ...appProps };
+};
+```
+
+```js
+/* pages/index.js */
+import Head from "next/head";
+import { compose } from "redux";
+import { toPromise } from "react-boilerplate-redux-saga-hoc";
+import { AuthenticationHOC, DashHOC } from "./config";
+
+function Home(props) {
+  console.log(props);
+  React.useEffect(() => {
+    const {
+      store,
+      isServer,
+      Auth_hoc: {
+        actions: { TEST_API_CALL },
+      },
+    } = props;
+    TEST_API_CALL();
+  }, []);
+  return (
+    <div className="container">
+      <Head>
+        <title>Create Next App</title>
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      <h1>create next app</h1>
+    </div>
+  );
+}
+
+Home.getInitialProps = async (props) => {
+  const { store, isServer } = props.ctx || props;
+  const {
+    Auth_hoc: {
+      actions: { TEST_API_CALL, REGISTER_API_CALL },
+    },
+    Dash_hoc: {
+      actions: { TEST_API_CALL: DashTest },
+    },
+  } = props;
+  TEST_API_CALL(); //  non-blocking call
+  /* toPromise is mostly used for login api calls */
+  const { status, error, reponse } = await toPromise(TEST_API_CALL); // blocking call - it will execute next line if promise is resolved
+  if (status === "SUCCESS")
+    await toPromise(REGISTER_API_CALL, {
+      request: {
+        payload: {
+          name: "test",
+          password: test,
+        },
+      },
+    });
+  else if (status === "Error") console.log("Error");
+  return {
+    isServer,
+  };
+};
+
+export default compose(AuthenticationHOC, DashHOC)(Home);
+```
+
+```js
+/* _app.js */
+/* add this in _app.js  if you are using nextJs 9.3 or later */
+import App from "next/app";
+
+MyApp.getInitialProps = async (appContext) => {
+  // calls page's `getInitialProps` and fills `appProps.pageProps`
+  const appProps = await App.getInitialProps(appContext);
+  return { ...appProps };
+};
+```
+
+## # Getting regenerator runtime error
+
+    Note:
+    If you are getting regenerator runtime error.
+    Please make sure you have added babelrc file in your nextjs project.
+
+```bash
+
+npm install babel-preset-next --save-dev
+
+```
+
+or
+
+```bash
+
+yarn add babel-preset-next --dev
+
+```
+
+.babelrc
+
+```json
+{
+  "presets": [
+    "next"
+    // Add your babel presets here
+  ],
+  "plugins": [
+    // Add your babel plugins here
+  ]
+}
+```
+
+Next - [Basic Concepts](/docs/basic-concepts/storing-data)

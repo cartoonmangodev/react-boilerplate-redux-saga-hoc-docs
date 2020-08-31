@@ -1,0 +1,162 @@
+---
+name: 3.0.7 Delete Key Handler
+route: /docs/handlers/delete-key-handler
+parent: Documentation
+menu: 3. Handlers
+---
+
+# Delete Key Handler
+
+      Note:
+      - Delete Key handler is slightly different from Delete handler, but it will delete only particular key in an object or an array of object
+
+## # Delete Key Handler without filter
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Delete-Key-Handler",
+    id: [1, 2],
+    key: "id",
+    deleteKey: ["age"],
+  },
+});
+```
+
+## # Delete Key Handler with filter
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Delete-Key-Handler",
+    id: [1, 2],
+    key: "id",
+    deleteKey: ["age"],
+  },
+  filter: ["name"],
+});
+```
+
+## # Delete Key Handler with Multi-filter
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Delete-Key-Handler",
+    id: [1, 2],
+    key: "id",
+    deleteKey: ["age"],
+  },
+  filter: [["filter-1"], ["filter-2"], ["filter-2"]],
+});
+```
+
+## # Delete Key Handler with Subkey
+
+    Note:
+    - sub key for handling sub level of data in an object
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Delete-Key-Handler",
+    subKey: ["data"],
+    id: [1, 2],
+    key: "id",
+    deleteKey: ["age"],
+  },
+  filter: [["filter-1"], ["filter-2"], ["filter-2"]],
+});
+```
+
+## # Delete Key Handler Function - Api
+
+     Important:
+    - The code below are the built in handler function.
+    - Don't copy and paste this handler, it is already available with this hoc.
+    - You will learn how to create your own custom handler in below.
+    - If you want to customize this handler you can do it.
+
+```javascript {.line-numbers}
+import {
+  generateTimeStamp,
+  updateIn,
+  getIn,
+  Safe,
+} from "react-boilerplate-redux-saga-hoc";
+
+const deletedData = (obj, keyArray) =>
+  Object.keys(obj).reduce(
+    (acc, curr) =>
+      (keyArray.includes(curr) && acc) || { ...acc, [curr]: obj[curr] },
+    {}
+  );
+
+export const deleteKeyHandler = ({
+  task: { key, id, deleteKey = [], subKey = [] } = {},
+  callback: { updateCallback } = {},
+  successData = {},
+}) => ({ data = {} } = {}) => ({
+  data:
+    subKey.length > 0
+      ? updateIn(
+          {
+            ...data,
+            ...successData,
+            [subKey[0]]: data[subKey[0]],
+          },
+          subKey,
+          (_Data) =>
+            updateCallback
+              ? updateCallback(_Data, successData) || _Data
+              : (!Array.isArray(_Data) && deletedData(_Data, deleteKey)) ||
+                (Array.isArray(id) &&
+                  _Data.reduce(
+                    (acc, curr) =>
+                      id.includes(curr[key])
+                        ? acc.concat([deletedData(curr, deleteKey)])
+                        : acc.concat([curr]),
+                    []
+                  )) ||
+                _Data.map((_data) =>
+                  _data[key] === id ? deletedData(_data, deleteKey) : _data
+                )
+        )
+      : updateCallback
+      ? updateCallback(data, successData) || data
+      : (!Array.isArray(data) && deletedData(data, deleteKey)) ||
+        (Array.isArray(id) &&
+          data.reduce(
+            (acc, curr) =>
+              id.includes(curr[key])
+                ? acc.concat([deletedData(curr, deleteKey)])
+                : acc.concat([curr]),
+            []
+          )) ||
+        data.map((_data) =>
+          _data[key] === id ? deletedData(_data, deleteKey) : _data
+        ),
+  lastUpdated: generateTimeStamp(),
+  isError: false,
+});
+```

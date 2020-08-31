@@ -1,0 +1,155 @@
+---
+name: 3.0.8 Splice Handler
+route: /docs/handlers/splice-handler
+parent: Documentation
+menu: 3. Handlers
+---
+
+# Splice Data Handler
+
+      Note:
+      - It is like a splice method in an array.
+      - It will remove the object in an array and add the new object in an array.
+
+## # Splice Data Handler without filter
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Splice-Data-Handler",
+    id: [1, 2],
+    key: "id",
+    spliceKey: [1, 3],
+  },
+});
+```
+
+## # Splice Data Handler with filter
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Splice-Data-Handler",
+    id: [1, 2],
+    key: "id",
+    spliceKey: [1, 3],
+  },
+  filter: ["name"],
+});
+```
+
+## # Splice Data Handler with Multi-filter
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Splice-Data-Handler",
+    id: [1, 2],
+    key: "id",
+    spliceKey: [1, 3],
+  },
+  filter: [["filter-1"], ["filter-2"], ["filter-2"]],
+});
+```
+
+## # Splice Data Handler with Subkey
+
+    Note:
+    - sub key for handling sub level of data in an object
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Splice-Data-Handler",
+    subKey: ["data"],
+    id: [1, 2],
+    key: "id",
+    spliceKey: [1, 3],
+  },
+  filter: [["filter-1"], ["filter-2"], ["filter-2"]],
+});
+```
+
+## # Splice Data Handler Function - Api
+
+      Important:
+    - The code below are the built in handler function.
+    - Don't copy and paste this handler, it is already available with this hoc.
+    - You will learn how to create your own custom handler in below.
+    - If you want to customize this handler you can do it.
+
+```javascript {.line-numbers}
+import {
+  generateTimeStamp,
+  updateIn,
+  getIn,
+  Safe,
+} from "react-boilerplate-redux-saga-hoc";
+export const spliceHandler = ({
+  task: { clearData, spliceKey = [], subKey = [] } = {},
+  callback: { updateCallback } = {},
+  successData = {},
+}) => ({ data: oldData = {} } = {}) => ({
+  data: (() => {
+    if (subKey.length > 0 && Array.isArray(getIn(oldData, subKey))) {
+      const _oldCopyData = {
+        ...oldData,
+        ...successData,
+        [subKey[0]]: oldData[subKey[0]],
+      };
+      // return _oldCopyData
+      return updateIn(_oldCopyData, subKey, (_oldData) => {
+        if (clearData) return Safe(successData, `.${subKey.join(".")}`, []);
+        return updateCallback
+          ? updateCallback(
+              _oldData,
+              Safe(successData, `.${subKey.join(".")}`, [])
+            )
+          : Array.isArray(_oldData)
+          ? (() => {
+              const _newData = _oldData.slice();
+              _newData.splice(
+                ...spliceKey,
+                ...Safe(successData, `.${subKey.join(".")}`, [])
+              );
+              return _newData;
+            })()
+          : _oldData;
+      });
+    }
+    const newData = Array.isArray(oldData)
+      ? (() => {
+          const _newData = oldData.slice();
+          return _newData.splice(
+            ...spliceKey,
+            ...Safe(successData, `.${subKey.join(".")}`, [])
+          );
+        })()
+      : oldData;
+    return updateCallback ? updateCallback(oldData, successData) : newData;
+  })(),
+  error: false,
+  lastUpdated: generateTimeStamp(),
+  isError: false,
+});
+```

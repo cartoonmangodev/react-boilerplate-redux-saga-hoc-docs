@@ -1,0 +1,141 @@
+---
+name: 2.5 Adding Filters
+route: /docs/basic-concepts/adding-data-based-on-filters
+parent: Documentation
+menu: 2. Basic Concepts
+---
+
+# Adding Filters
+
+## # Adding filters in api calls
+
+     Note:
+     -Suppose there is a scenario where same api is used with multiple filters.In that case we have to Store different data.
+
+```js
+const BASE_URL = "https://example.com/";
+
+const DEMO_API_CONFIGURATION = {
+  url: ({ id }) => `${BASE_URL}user/${id}`,
+  method: "GET",
+  responseStatusCode: [900],
+  responseStatusCodeKey: "code",
+  responseDataKey: "data",
+  responseMessageKey: "status",
+  errorMessageKey: "error",
+};
+
+DEMO_API_CONFIGURATION_CALL({
+  filter: ["name"],
+  request: {
+    params: { id: 2 },
+    query: { type: "name" },
+  },
+});
+/*
+Example:
+responseData = { id: 1 }
+storeData = { name: { id: 1 }
+*/
+```
+
+       Note:
+       -In this case it will store the data in an object with key 'name'
+
+## # Deleting key in an Filter object
+
+       Note:
+       -It is almost similar to update, but instead of updating particular key it will delete the particular key from the object
+
+```js
+const BASE_URL = "https://example.com/";
+
+const DEMO_API_CONFIGURATION = {
+  url: ({ id }) => `${BASE_URL}user/${id}`,
+  method: "GET",
+  responseStatusCode: [900],
+  responseStatusCodeKey: "code",
+  responseDataKey: "data",
+  responseMessageKey: "status",
+  errorMessageKey: "error",
+};
+
+DEMO_API_CONFIGURATION_CALL({
+  task: {
+    name: "Delete-Key-Handler",
+    id: [1, 2, 3],
+    key: "id",
+    deleteKey: ["name", "age"],
+  },
+  filter: ["name"],
+  request: {
+    params: { id: 1 },
+    paramsSerializer: { arrayFormat: "bracket" }, //default: none - refer query-string npm package
+    query: { skip: 10, age: [20, 20] },
+    payload: { age: 20 }, // for post calls
+  },
+});
+/*
+Example:
+
+data = { name : [
+  { id: 1, name: 'name1',age: '13',gender: 'male' },
+  { id: 1, name: 'name1',age: '12',gender: 'female' }
+]}
+After executing task:
+data = { name : [
+  { id: 1, gender: 'male' },
+  { id: 2, gender: 'female' }
+}]
+*/
+```
+
+## # Manually Deleting Filter Data by calling custom task
+
+       Note:
+       -Calling custom task will allow us to manipulate data without calling any api..such as adding count,limit,skip..etc
+
+```js
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    task: "Delete-Handler",
+    id: [1, 2],
+    key: "id",
+  },
+  filter: ["name"],
+});
+```
+
+## # Getting Filter Data from store
+
+##
+
+```js
+import { useMemo } from "react";
+import { useQuery } from "react-boilerplate-redux-saga-hoc";
+const {
+  Auth_hoc: {
+    reducerName,
+    reducerConstants: { DEMO_API_CONFIGURATION },
+  },
+} = props;
+
+const [nameDate, ageData] = useQuery(reducerName, [
+  { key: DEMO_API_CONFIGURATION, filter: ["name"] },
+  { key: DEMO_API_CONFIGURATION, filter: ["age"] },
+]);
+
+/**
+nameData returns 
+{ loader, data, latUpdated, isInfinite, isInfiniteEnd } 
+ageData returns 
+{ loader, data, latUpdated, isInfinite, isInfiniteEnd } 
+**/
+```
+
+Next - [How to access deep object by using sub key](/docs/basic-concepts/using-subkey-for-accessing-deep-object)

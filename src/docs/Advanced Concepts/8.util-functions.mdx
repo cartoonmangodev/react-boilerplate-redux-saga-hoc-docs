@@ -1,0 +1,70 @@
+---
+name: 4.0.8 Util Functions
+route: /docs/advanced-concepts/util-functions
+parent: Documentation
+menu: 4. Advanced Concepts
+---
+
+# Util Functions
+
+## # Safe Function
+
+    Note:
+    -This function will be used for accessing deep level of object.
+
+```javascript {.line-numbers}
+import { Safe } from 'react-boilerplate-redux-saga-hoc';
+
+Example 1:
+const defaultValue = '';
+const object = { name: { name: { age: { person: 'jfjj' } } } }
+const Person =  Safe(object , '.name.name.age.person', defaultValue);
+
+Example 2:
+const callback = (person) => return person + person;
+const Person = Safe(object , '.name.name.age.person', defaultValue , callback)
+
+```
+
+       Note:
+     -defaultValue is typeof value should return ,if the value return array by default safe function will return default value.
+     -if don't pass any value in third parameter it return the ececuted value otherwise return null.
+
+## # Other Util functions
+
+```javascript {.line-numbers}
+import { cloneObject , newObject } from 'react-boilerplate-redux-saga-hoc';
+
+Example 1:
+const oldObject = { name: '' };
+const newObject = { age: '' };
+const obj = cloneObject(oldObject, newObject)
+obj returns {  name: '', age: '' }
+
+Example 2:
+const object = { name: '',profile: { name : '' } };
+const obj = newObject(object,({ profile }) => ({
+   profile: newObject(profile, { age: 20 })
+}))
+obj returns {  name: '', age: 20 }
+```
+
+```javascript {.line-numbers}
+import {
+  cloneObject,
+  newObject,
+  deleteIn,
+  getIn,
+  objectEquals,
+  setIn,
+  updateIn,
+  generateTimeStamp,
+} from "react-boilerplate-redux-saga-hoc";
+const data = {};
+console.log(getIn(data, ["data", "age"])); // returns data or undefined
+const deletedData = deleteIn(data, ["data", "age"]); // returns data
+const newdata = setIn(data, ["data", "age"], 20);
+const updatedData = updateIn(data, ["data", "age"], () => 30);
+console.log(generateTimeStamp());
+console.log(objectEquals({}, {}));
+```

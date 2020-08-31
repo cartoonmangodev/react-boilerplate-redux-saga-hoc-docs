@@ -1,0 +1,40 @@
+---
+name: 4.0.4 Cancelling Api Calls
+route: /docs/advanced-concepts/cancelling-api-calls
+parent: Documentation
+menu: 4. Advanced Concepts
+---
+
+# Cancelling Api Calls
+
+## # cancel on unmount
+
+         Note:
+         -This function will help cancel unwanted api calls
+
+```javascript {.line-numbers}
+const { ON_SUCCESS, ON_UNMOUNT } = commonConstants;
+const { DEMO_API_CONFIGURATION_CANCEL, DEMO_API_CONFIGURATION_CALL } = props;
+
+useEffect(() => {
+  DEMO_API_CONFIGURATION_CALL();
+  return () => {
+    DEMO_API_CONFIGURATION_CANCEL(ON_UNMOUNT);
+  };
+}, []);
+```
+
+       Note:
+       -ON_UMOUNT will reset the particular state to initial
+
+```javascript {.line-numbers}
+const { ON_SUCCESS, ON_UNMOUNT } = commonConstants;
+const { DEMO_API_CONFIGURATION_CANCEL, DEMO_API_CONFIGURATION_CALL } = props;
+
+useEffect(() => {
+  DEMO_API_CONFIGURATION_CALL();
+  return () => {
+    DEMO_API_CONFIGURATION_CANCEL(ON_UNMOUNT, ["filter"]);
+  };
+}, []);
+```

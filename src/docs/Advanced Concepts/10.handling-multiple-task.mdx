@@ -1,0 +1,230 @@
+---
+name: 4.1.0 Handling Multiple tasks
+route: /docs/advanced-concepts/handling-multiple-tasks
+parent: Documentation
+menu: 4. Advanced Concepts
+---
+
+# # Handling Multiple tasks
+
+```javascript {.line-numbers}
+// hooks/customHook.js
+import { useEffect, useMemo } from "react";
+
+export default (
+  {
+    Auth_hoc: {
+      actions: { TEST_API_CUSTOM_TASK, TEST_SUB_API_CUSTOM_TASK },
+    },
+    Auth_data: { TEST_API, TEST_SUB_API },
+    getData,
+  },
+  { commonConstants }
+) => {
+  const { ON_SUCCESS } = commonConstants;
+  useEffect(() => {
+    TEST_SUB_API_CUSTOM_TASK(ON_SUCCESS, {
+      task: {
+        response: {
+          data: {
+            items: [
+              {
+                name: "cartoon",
+              },
+            ],
+          },
+        },
+      },
+    });
+    TEST_SUB_API_CUSTOM_TASK(ON_SUCCESS, {
+      task: {
+        response: {
+          data: {
+            count: 20,
+          },
+        },
+      },
+    });
+    setTimeout(() => {
+      TEST_SUB_API_CUSTOM_TASK(ON_SUCCESS, {
+        task: {
+          name: "Infinite-handler",
+          subKey: ["items"],
+          response: {
+            data: {
+              count: 50,
+              items: [
+                {
+                  name: "mango",
+                },
+              ],
+            },
+          },
+        },
+      });
+    }, 1);
+    setTimeout(() => {
+      TEST_SUB_API_CUSTOM_TASK(ON_SUCCESS, {
+        task: {
+          name: "Delete-Handler",
+          subKey: ["items"],
+          id: "cartoon",
+          key: "name",
+        },
+      });
+    }, 2);
+    setTimeout(() => {
+      TEST_SUB_API_CUSTOM_TASK(ON_SUCCESS, {
+        task: {
+          name: "Delete-Key-Handler",
+          subKey: ["items"],
+          id: "mango",
+          key: "name",
+          deleteKey: ["name"],
+        },
+      });
+    }, 3);
+    setTimeout(() => {
+      TEST_SUB_API_CUSTOM_TASK(ON_SUCCESS, {
+        task: {
+          name: "Data-Handler", // no need specify name if you are using data handler it ia default handler
+          resonse: {
+            data: {
+              count: 100,
+              items: [
+                {
+                  name: "1",
+                },
+                {
+                  name: "2",
+                },
+                {
+                  name: "3",
+                },
+                {
+                  name: "4",
+                },
+              ],
+            },
+          },
+        },
+      });
+    }, 4);
+    // Handling multiple tasks of same api in on action
+    setTimeout(() => {
+      TEST_SUB_API_CUSTOM_TASK(ON_SUCCESS, {
+        tasks: [
+          {
+            task: {
+              name: "Infinite-Handler",
+              clearData: true,
+              response: {
+                data: {
+                  count: 30,
+                  items: [
+                    { name: "10" },
+                    { name: "15" },
+                    { name: "25" },
+                    { name: "35" },
+                    { name: "45" },
+                  ],
+                },
+              },
+            },
+            filter: ["check"],
+          },
+          {
+            task: {
+              name: "Delete-Handler",
+              subKey: ["items"],
+              id: "1",
+              key: "name",
+            },
+            filter: ["check"],
+          },
+          {
+            task: {
+              name: "Infinite-Handler",
+              subKey: ["items"],
+              //   clearData: true,
+              response: {
+                data: {
+                  count: 300,
+                  items: [{ name: "54" }],
+                  data: [{ name: "54" }],
+                },
+              },
+            },
+            filter: ["check"],
+          },
+          {
+            task: {
+              name: "Delete-Handler",
+              subKey: ["items"],
+              id: ["3", "4", "5"],
+              key: "name",
+            },
+            filter: ["check"],
+          },
+          {
+            task: {
+              name: "Update-Handler",
+              subKey: ["items"],
+              id: ["10", "25", "15"],
+              key: "name",
+              values: {
+                "10": {
+                  status: "married",
+                },
+                "25": {
+                  status: "unmarried",
+                },
+                "15": {
+                  status: "married",
+                },
+              },
+              response: {
+                data: {
+                  count: 30,
+                  limit: 20,
+                },
+              },
+            },
+            filter: ["check"],
+          },
+          {
+            task: {
+              name: "Delete-Key-Handler",
+              subKey: ["items"],
+              id: ["10"],
+              key: "name",
+              filter: ["check"],
+              deleteKey: ["name"],
+            },
+          },
+          {
+            task: {
+              name: "Toggle-Key-Handler",
+              subKey: ["items"],
+              id: ["15"],
+              key: "name",
+              filter: ["check"],
+              toggleKey: ["name", "status"],
+            },
+          },
+        ],
+        filter: [["name"], ["chrisie"]], // this is common filter for task if you dont specify filter inside task it will use this filter
+        response: {}, // this is common response for task if you dont specify response inside task it will use this response
+      });
+    }, 5);
+  }, []);
+  const test = useMemo(() => getData(TEST_API, {}, false), [TEST_API]);
+  const test_sub = useMemo(() => getData(TEST_SUB_API, {}, false), [
+    TEST_SUB_API,
+  ]);
+  return {
+    test,
+    test_sub,
+  };
+};
+```

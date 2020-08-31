@@ -1,0 +1,33 @@
+---
+name: 4.0.6 Inject saga and reducer to the store
+route: /docs/advanced-concepts/inject-saga-and-reducer-to-the-store-by-using-hooks
+parent: Documentation
+menu: 4. Advanced Concepts
+---
+
+## # Inject saga and reducer to the store
+
+       Note:
+    - By injecting reducer and saga you can able to create your own reducer and saga.
+    - It helps in most of the scenarios such as polling,creating youer own logic ..etc
+
+```javascript {.line-numbers}
+import { takeLatest } from "redux-saga/effects";
+import { injectReducer, injectSaga } from "react-boilerplate-redux-saga-hoc";
+
+const initialState = {};
+const reducer = (state = initialState, action) => {
+  return state;
+};
+
+function* getRepos() {}
+
+const saga = function*() {
+  yield takeLatest("LOAD_DATA", getRepos);
+};
+
+const withSaga = injectSaga({ key: "dashboard", saga });
+const withReducer = injectReducer({ key: "dashboard", reducer });
+
+export default compose(withSaga, withReducer)(Dashboard);
+```

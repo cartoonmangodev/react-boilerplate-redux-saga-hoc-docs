@@ -1,0 +1,131 @@
+---
+name: 3.0.3 Infinite Handler
+route: /docs/handlers/infinite-handler
+parent: Documentation
+menu: 3. Handlers
+---
+
+# Infinite Handler
+
+## # Infinite Handler without filter
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Infinite-Handler",
+    clearData: true,
+  },
+});
+```
+
+## # Infinite Handler with filter
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Infinite-Handler",
+    isAppendTop: true,
+  },
+  filter: ["name"],
+});
+```
+
+## # Infinite Handler with Multi-filter
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Data-Handler",
+    isAppendTop: false, // By default date will added below
+  },
+  filter: [["filter-1"], ["filter-2"], ["filter-2"]],
+});
+```
+
+## # Things to Remember
+
+     -Adding multiple filters will create multiple copy of the same data.
+    -It will helps to handle different types of data in same api..such as variable kind of filters.
+
+## # Infinite Handler Function - Api
+
+        Important:
+    - The code below are the built in handler function.
+    - Don't copy and paste this handler, it is already available with this hoc.
+    - You will learn how to create your own custom handler in below.
+    - If you want to customize this handler you can do it.
+
+```javascript {.line-numbers}
+import {
+  generateTimeStamp,
+  updateIn,
+  getIn,
+  Safe,
+} from "react-boilerplate-redux-saga-hoc";
+
+const _checkIsNotObject = (data) =>
+  Object.prototype.toString.call(data) !== "[object Object]";
+
+export const infiniteHandler = ({
+  task: { clearData, subKey = [], limit, isAppendTop = false } = {},
+  callback: { updateCallback } = {},
+  successData = {},
+}) => ({ data: oldData = {} } = {}) => ({
+  data: (() => {
+    if (subKey.length > 0 && Array.isArray(getIn(oldData, subKey))) {
+      const _oldCopyData = {
+        ...oldData,
+        ...successData,
+        [subKey[0]]: oldData[subKey[0]],
+      };
+      // return _oldCopyData
+      return updateIn(_oldCopyData, subKey, (_oldData) => {
+        if (clearData) return Safe(successData, `.${subKey.join(".")}`, []);
+        return updateCallback
+          ? updateCallback(
+              _oldData,
+              Safe(successData, `.${subKey.join(".")}`, [])
+            )
+          : isAppendTop
+          ? Safe(successData, `.${subKey.join(".")}`, []).concat(_oldData)
+          : _oldData.concat(Safe(successData, `.${subKey.join(".")}`, []));
+      });
+    }
+    const getData = Array.isArray(successData) ? successData : [];
+    const appendData = Array.isArray(oldData)
+      ? isAppendTop
+        ? getData.concat(oldData)
+        : oldData.concat(getData)
+      : getData;
+    const newData =
+      (clearData && successData) ||
+      (Array.isArray(successData) && appendData) ||
+      successData;
+    return updateCallback ? updateCallback(oldData, successData) : newData;
+  })(),
+  error: false,
+  lastUpdated: generateTimeStamp(),
+  isInfinite: true,
+  isError: false,
+  infiniteEnd:
+    (subKey.length > 0
+      ? Safe(successData, `.${subKey.join(".")}`, [])
+      : successData
+    ).length < limit,
+});
+```

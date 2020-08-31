@@ -1,0 +1,888 @@
+---
+name: Api Reference
+route: /api-reference
+---
+
+## # task - `<Object>`
+
+    Object:
+    1.name -> <String> - handler name to execute particular task
+    2.options -> handler options - it will vary based on handlers
+
+```js
+
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+const options = {
+  clearData: true,
+  updateCallback: (data) => return data
+};
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Data-Handler",
+    ...options,
+  },
+});
+```
+
+## # tasks - `<Array of task>`
+
+```js
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+const dataOptions = {
+  clearData: true,
+};
+const infiniteOptions = {
+  clearData: true,
+  id: [1],
+  isAppendTop: true,
+};
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  tasks: [
+    {
+      task: {
+        name: "Data-Handler",
+        ...dataOptions,
+      },
+      filter: ["filter-1"],
+    },
+    {
+      task: {
+        name: "Infinite-Handler",
+        ...infiniteOptions,
+      },
+      filter: ["filter-2"],
+    },
+  ],
+});
+```
+
+## # using useQuery hook in different ways
+
+```js
+import { useQuery } from "react-boilerplate-redux-saga-hoc";
+
+const { loader, data, lastUpdated, isError, error, toast } = useQuery(
+  reducerName,
+  TEST_GET_API
+);
+
+/* accessing multiple data  at single query */
+const [test_data, test, test_deep, testGetApi] = useQuery(
+  reducerName /* can pass any reducer key such as 'Auth' , 'router' , ..etc*/,
+  [
+    {
+      key: TEST_GET_API,
+      name: "test",
+      initialLoaderState: true,
+    },
+    {
+      key: TEST_GET_API,
+      query: ".data[0]",
+      initialLoaderState: false,
+    },
+    {
+      key: TEST_GET_API,
+      query: ".data",
+      initialLoaderState: false,
+      default: [], // Default for data key it also check's type of data..if type is object return [].Don't pass if you dont want to type check
+    },
+    TEST_GET_API,
+  ]
+);
+
+/* query can be used in different ways based on your requirement */
+
+const [data, loader] = useQuery(
+  reducerName, // can pass any reducer key such as 'Auth' , 'router' , ..etc
+  TEST_GET_API,
+  [
+    {
+      query: ".data[0]",
+      default: [],
+    },
+    {
+      query: ".loader",
+      default: false,
+    },
+  ]
+);
+
+/* pass array of string instead of object */
+
+const [
+  { loader, data, lastUpdated, isError, error, toast },
+] = useQuery(reducerName, [TEST_GET_API]);
+
+/* Pass an object instead of array */
+const data = useQuery(reducerName, {
+  key: TEST_GET_API,
+  default: [],
+  requiredKey: ["loader", "data", "lastUpdated"],
+});
+
+/* pass a string insted of array */
+const { loader, data, lastUpdated, isError, error, toast } = useQuery(
+  reducerName,
+  TEST_GET_API
+);
+
+/* Pass a config as a third parameter its optional */
+const data = useQuery(reducerName, TEST_GET_API, {
+  query: ".data",
+  default: [],
+});
+
+/* for getting whole reducer data */
+const data = useQuery(); // Don't use this use this until its required it will render the component every time reducer change
+const data = useQuery(reducerName); // Don't use this until its required it will render the component every time reducer data change
+```
+
+## # request - `<Object>`
+
+     Object:
+    1.query -> <object> - send query params to the api
+    2.params -> <object> - passing params to an api
+    3.payload -> <object> - send payload to the api for post calls
+    4.axiosConfig -> <object>
+    5.paramSerializer -> <object> default { arrayFormat: 'brackets' } refer axios
+    6.asyncFunction -> <function>
+    7.asyncFunctionParams -> <array[params]>
+    8.retry -> <number>
+    9.errorParser -> <function>
+    10.polling -> <boolean> true or false
+    11.pollingCount -> <number> number of polling
+    12.delay -> <Number> in milliseconds
+    13.clearDataOnError -> <boolean> true or false - (default false)
+    14.errorDataHandling -> <boolean> true or false  - (default true)
+    15.responseErrorParser -> <Boolean> in milliseconds  - (default false)
+
+```js
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+const options = {
+  clearData: true,
+};
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Data-Handler",
+    ...options,
+  },
+  request: {
+    query: {
+      search: "name",
+    },
+    params: {
+      id: 1,
+    },
+    payload: {
+      password: "test",
+    },
+    axiosConfig: {
+      responseType: "application/json",
+    },
+    paramSerializer: {},
+  },
+});
+```
+
+## # callback - `<Object>`
+
+     Object:
+    1.successCallback -> <function({ data, status, message})> - for handling success
+    2.errorCallback -> <function({ error, status, message, errorData})> - for handling failure
+    3.finalCallback -> <function({ type, action, payload, Cancelled })> - triggers on both success and failure
+    4.updateStateCallback -> <function({ state, data /* successdata */, type })> - for manipulating the state
+    5.pollingCallback -> <function({ res, data /* successdata */, message, status, count /* polling count */ })> - return <object || boolean || null> returns true will stop polling
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+const options = {
+  clearData: true,
+};
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Data-Handler",
+    ...options,
+  },
+  callback: {
+    successCallback({ data, status, message }) {
+      console.log({ data, status, message });
+    },
+    errorCallback({ error, status, message, errorData }) {
+      console.log({ error, status, message, errorData });
+    },
+    errorCallback({ type, action, payload, Cancelled }) {
+      console.log({ type, action, payload, Cancelled });
+    },
+    pollingCallback({
+      res,
+      data /* successdata */,
+      message,
+      status,
+      count /* polling count */,
+    }) {
+      console.log({ res, data, message, status, count });
+      return {
+        params: {},
+        query: {},
+        paramsSerializer: {},
+        asyncFunctionParams: {},
+      };
+      /* returns true will stop polling */
+    },
+    updateStateCallback({ state, data /* successdata */, type }) {
+      return newObject(state, ({ [type]: Data }) => ({
+        [type]: newObject(Data, () => data),
+      }));
+    },
+  },
+});
+```
+
+## # updateStateCallback - `<Function>`
+
+     Function:
+    updateStateCallback -> <function({ state, data /* successdata */, type })> - for manipulating the state
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+const options = {
+  clearData: true,
+};
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Data-Handler",
+    ...options,
+  },
+  callback: {
+    updateStateCallback({ state, data /* successdata */, type }) {
+      return newObject(state, ({ [type]: Data }) => ({
+        [type]: newObject(Data, () => data),
+      }));
+    },
+  },
+});
+```
+
+## # subKey - `<Array>` accessing deep object
+
+    Array:
+    subKey -> <Array> - for store or update data on that paricular object
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+const options = {
+  subKey: ["data", "data"],
+};
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Data-Handler",
+    ...options,
+  },
+});
+```
+
+## # deleteKey - `<Array>` of keys to delete
+
+    Array:
+    deleteKey -> <Array> - for removing a particular key in an object
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+const options = {
+  deleteKey: ["name", "age"],
+};
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Delete-Handler",
+    ...options,
+  },
+});
+```
+
+## # filter - `<Array>` storing data based on filter
+
+    Array:
+    filter -> <Array> - for storing different type of data
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+const options = {
+  deleteKey: ["name", "age"],
+};
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Delete-Handler",
+    ...options,
+  },
+  filter: ["gadgets", "grocerries"],
+});
+```
+
+## # filter - `<Array>` update n number of filters at single task
+
+    Array:
+    filter -> <Array> - create or update n number of filters at single task
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+const options = {
+  deleteKey: ["name", "age"],
+};
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Delete-Handler",
+    ...options,
+  },
+  filter: [["gadgets", "grocerries"], ["cars"], ["house"]],
+});
+```
+
+## # id - `<Array>` || `<string>` || `<number>`
+
+    Array:
+    id -> <Array> - for accessing particular object in an array
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+const options = {
+  id: ["1", "2"],
+  key: "id",
+};
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Update-Handler",
+    ...options,
+  },
+  filter: [["gadgets", "grocerries"], ["cars"], ["house"]],
+});
+```
+
+## # key - id Key example: 'user_id' `<String>`
+
+        Array:
+        key -> <string> - for reference to id
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+const options = {
+  id: ["1", "2"],
+  key: "id",
+};
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Update-Handler",
+    ...options,
+  },
+  filter: [["gadgets", "grocerries"], ["cars"], ["house"]],
+});
+```
+
+## # clearData - clearing data `<Boolean>` for infinite
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+const options = {
+  clearData: true,
+};
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Infinite-Handler",
+    ...options,
+  },
+});
+```
+
+## # isAppendTop - for storing data in top for infinite
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+const options = {
+  clearData: true,
+};
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Infinite-Handler",
+    ...options,
+  },
+});
+```
+
+## # limit - `<Number>` for infinite scrool to false
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+const options = {
+  limit: 15,
+};
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Infinite-Handler",
+    ...options,
+  },
+});
+```
+
+## # query - `<Object>` adding query parameters to url
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  request: {
+    query: {
+      type: 1,
+    },
+  },
+});
+```
+
+## # params - `<Object>` params for aps eg:api/:id
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  request: {
+    params: {
+      id: 1,
+    },
+  },
+});
+```
+
+## # successCallback - `<Function>`<{res : `<Object>`,data`<Object>`,status, message}>
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  callback: {
+    successCallback({ data, status, message, res }) {
+      console.log({ data, status, message, res });
+    },
+  },
+});
+```
+
+## # errorCallback - `<Function>`<{error : `<Error instance>`,errorData`<Object>`,status, message}>
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  callback: {
+    errorCallback({ error, status, message, errorData }) {
+      console.log({ error, status, message, errorData });
+    },
+  },
+});
+```
+
+## # updateCallback - `<Function> <Object>`
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    updateCallback(oldData, successData) {
+      return {
+        ...oldData,
+        ...successData,
+      };
+    },
+  },
+});
+```
+
+## # payload - `<Function>`
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  request: {
+    payload: {
+      id: 1,
+      password: "test",
+    },
+  },
+});
+```
+
+## # ON_SUCCESS - storing data based on success data or loaded data
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    response: {
+      data: {
+        age: 20,
+      },
+    },
+  },
+  request: {
+    payload: {
+      id: 1,
+      password: "test",
+    },
+  },
+});
+```
+
+## # ON_UNMOUNT - reset the data
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_UNMOUNT } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_UNMOUNT, ["flter-1"]);
+```
+
+## # ON_ERROR - setting the loader false and error data
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_ERROR } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_ERROR, {
+  error: {
+    status: 500,
+    message: "internal server error",
+    isError: true,
+  },
+});
+```
+
+## # ON_LOADING - setting the loader true or false
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_LOADING } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_LOADING, {
+  loader: false,
+});
+```
+
+## # ON_TOAST - setting the toast data
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_TOAST } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_TOAST, {
+  toast: {
+    message: "new toast",
+    isError: false,
+  },
+});
+```
+
+## # [ON_TOAST, ON_LOADING, ON_ERROR, ON_SUCCESS] - doing all task at one action
+
+```js
+import {
+  HOC,
+  commonConstants,
+  store,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+
+const { ON_TOAST } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(
+  [ON_TOAST, ON_LOADING, ON_ERROR, ON_SUCCESS],
+  {
+    task: {
+      response: {
+        data: {
+          age: 20,
+        },
+      },
+    },
+    toast: {
+      message: "new toast",
+      isError: false,
+    },
+    loader: false,
+    error: {
+      status: 500,
+      message: "internal server error",
+      isError: true,
+    },
+  }
+);
+```
+
+## # Api End Point Params
+
+- url,
+- method,
+- responseMessageKey,
+- responseDataKey,
+- responseStatusKey,
+- responseStatusCodeKey,
+- errorMessageKey,
+- errorDataKey,
+- errorHandlerStatusCode,
+- effect - takeLatest default || 'every' for takeEvery
+
+```js
+const response = {
+  code: 900,
+  data: {},
+  status: "successfully fetched data",
+};
+const error = {
+  errorCode: 500,
+  error: {},
+  message: "successfully fetched data",
+};
+const DEMO_API_CONFIGURATION = {
+  url: `${BASE_URL}user/`,
+  method: "GET",
+  responseStatusCode: [900, 200], // for handling success
+  responseStatusCodeKey: "code", // for storing status message - default key will be status
+  responseMessageKey: "status",
+  errorMessageKey: "error",
+  responseDataKey: "data", // default will be data
+  errorMessageKey: "message",
+  errorDataKey: "error",
+  errorHandlerStatusCode: [901], // if success data has error code [901] it will goes to error handler
+};
+```
+
+## # GetData - returns
+
+- data - `< Object >`
+- loader - `< Boolean >`
+- lastUpdated - `< Boolean >`
+- isInfinite - `< Boolean >`
+- infiniteEnd - `< Boolean >`
+- isError - `< Boolean >`
+- error - `< Object >`
+- toast - `< toast >`
+
+```js
+import { useMemo } from "react";
+const {
+  getData,
+  Auth_data: { DEMO_API_CONFIGURATION },
+} = props;
+
+const { data, loader, latUpdated, isInfinite, isInfiniteEnd } = useMemo(
+  () => getData(DEMO_API_CONFIGURATION, {}, false),
+  [DEMO_API_CONFIGURATION]
+);
+```
+
+## # GetData - params
+
+- Object(data) - `< Object >`
+- defaultValue - `< Array || Object || Boolean || null || String >`
+- loader - `< Boolean >`
+- filter - `< Array >`
+
+```js
+import { useMemo } from "react";
+const {
+  getData,
+  Auth_data: { DEMO_API_CONFIGURATION },
+} = props;
+
+const { data, loader, latUpdated, isInfinite, isInfiniteEnd } = useMemo(
+  () =>
+    getData(
+      DEMO_API_CONFIGURATION /* data */,
+      {} /* typeof value */
+      false /* initial state of the loader*/,
+      ["filter-1"] /* for getting paricular filter data */
+    ),
+  [DEMO_API_CONFIGURATION]
+);
+```
