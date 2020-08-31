@@ -20,19 +20,19 @@ const focus = css`
   color: ${(props) => props.theme.darkBlue};
   cursor: text;
   width: 5em;
-  /* + ${SearchIcon} {
+  + ${SearchIcon} {
     color: ${(props) => props.theme.darkBlue};
     margin: 0.3em;
-  } */
+  }
 `;
 
 const collapse = css`
   width: 0;
   cursor: pointer;
   color: ${(props) => props.theme.lightBlue};
-  /* + ${SearchIcon} {
+  + ${SearchIcon} {
     color: white;
-  } */
+  }
   ${(props) => props.focus && focus}
   margin-left: ${(props) => (props.focus ? `-1.6em` : `-1em`)};
   padding-left: ${(props) => (props.focus ? `1.6em` : `1em`)};
@@ -46,9 +46,9 @@ const expand = css`
   width: 20em;
   margin-left: -1.6em;
   padding-left: 1.6em;
-  /* + ${SearchIcon} {
+  + ${SearchIcon} {
     margin: 0.3em;
-  } */
+  }
 `;
 
 export const Input = styled.input`
