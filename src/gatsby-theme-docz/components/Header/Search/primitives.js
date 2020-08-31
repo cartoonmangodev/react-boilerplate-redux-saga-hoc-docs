@@ -79,7 +79,7 @@ export const HitsWrapper = styled.div`
   max-width: 20em;
   box-shadow: 0 0 5px 0;
   padding: 0.7em 1em 0.4em;
-  background: white;
+  background: ${(props) => (props.colorMode === "light" ? "white" : "black")};
   border-radius: ${(props) => props.theme.smallBorderRadius};
   > * + * {
     padding-top: 1em !important;
