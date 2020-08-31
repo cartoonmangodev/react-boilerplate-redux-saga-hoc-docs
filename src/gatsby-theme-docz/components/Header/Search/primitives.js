@@ -55,11 +55,7 @@ export const Input = styled.input`
   outline: none;
   border: none;
   font-size: 1em;
-  background: ${(props) =>
-    props.colorMode === "light" ? "transparent" : "white"};
-  padding: 8px;
-  border-radius: 5px;
-  margin: 0px 10px 0px 10px;
+  background: transparent;
   transition: ${(props) => props.theme.shortTrans};
   border-radius: ${(props) => props.theme.smallBorderRadius};
   ${(props) => (props.collapse ? collapse : expand)};
@@ -83,7 +79,7 @@ export const HitsWrapper = styled.div`
   max-width: 20em;
   box-shadow: 0 0 5px 0;
   padding: 0.7em 1em 0.4em;
-  background: ${(props) => (props.colorMode === "light" ? `white` : `black`)};
+  background: white;
   border-radius: ${(props) => props.theme.smallBorderRadius};
   > * + * {
     padding-top: 1em !important;
@@ -132,9 +128,9 @@ const PoweredBySpan = styled.span`
 
 export const PoweredBy = () => (
   <PoweredBySpan>
-    {/* Powered by{` `}
+    Powered by{` `}
     <a href="https://algolia.com">
       <Algolia size="1em" /> Algolia
-    </a> */}
+    </a>
   </PoweredBySpan>
 );
