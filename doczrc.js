@@ -1,6 +1,6 @@
 export default {
   themeConfig: {
-    initialColorMode: "dark",
+    initialColorMode: "light",
     showDarkModeSwitch: true,
     showMarkdownEditButton: true,
     repository:
