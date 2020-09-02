@@ -276,6 +276,11 @@ const [data, loader] = useQuery(
   ]
 );
 
+/* For direct accessing reducer keys */
+const { isLoggedIn, profile } = useQuery(reducerName, {
+  requiredKey: ["isLoggedIn", "profile"],
+});
+
 /* pass array of string instead of object */
 
 const [
