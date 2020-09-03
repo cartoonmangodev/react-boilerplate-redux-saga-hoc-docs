@@ -64,7 +64,16 @@ export const NavSearch = ({ collapse, hitsAsGrid }) => {
       indexName={indices[0].name}
       onSearchStateChange={({ query }) => setQuery(query)}
     >
-      <div style={styles.wrapper} ref={ref}>
+      <div
+        style={{
+          ...styles.wrapper,
+          padding: "5px 10px 5px 10px",
+          borderRadius: "5px",
+          margin: "0px 10px",
+          background: "white",
+        }}
+        ref={ref}
+      >
         <Input
           onFocus={() => setFocus(true)}
           {...{ collapse, focus }}
