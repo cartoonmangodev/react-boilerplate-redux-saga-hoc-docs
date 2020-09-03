@@ -86,7 +86,7 @@ export const NavSearch = ({ collapse, hitsAsGrid }) => {
               </Results>
             </Index>
           ))}
-          <PoweredBy />
+          {/* <PoweredBy /> */}
         </HitsWrapper>
       </div>
     </InstantSearch>
