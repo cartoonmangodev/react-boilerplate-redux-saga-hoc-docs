@@ -7,8 +7,7 @@ export default {
       "https://github.com/cartoonmangodev/react-boilerplate-redux-saga-hoc",
   },
   title: "React Boilerplate Redux Saga Hoc",
-  description:
-    "No worry about api calls.No need to create constants,reducer,saga,actions.Easy to make api call.Handles automatically all api request,cancel,errors etc",
+  description: "React Boilerplate Redux Saga Hoc - Documentation",
   linesToScrollEditor: 14,
   pathPrefix: "/react-boilerplate-redux-saga-hoc-docs/",
   base: "/react-boilerplate-redux-saga-hoc-docs/",
