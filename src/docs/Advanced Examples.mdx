@@ -349,7 +349,7 @@ resetState(dontResetKeys); // it will reset only endpoints to initial state exce
 ## # Using useQuery in Different Ways
 
 ```js
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useQuery,
   // useMutateReducer,
@@ -363,12 +363,12 @@ export default ({ useAuthHoc }) => {
   //   ON_LOADING,
   //   ON_TOAST,
   // } = commonConstants;
-  const [RefreshKey] = useState(null);
+  const [RefreshKey, setRefreshKey] = useState(1);
   const {
     reducerConstants: { DEMO_URL },
     reducerName,
   } = useAuthHoc();
-  console.clear();
+  // console.clear();
   const reducerData = useQuery(reducerName, null, null, null, () =>
     console.log("reducer called")
   );
@@ -414,7 +414,7 @@ export default ({ useAuthHoc }) => {
       },
     ],
     (rest) => rest,
-    (updatedData /* Updated Data */, previousData /* Previous Data */) => {
+    () => {
       console.log("data_format_5 callback called");
     }
   );
@@ -424,16 +424,22 @@ export default ({ useAuthHoc }) => {
     {
       key: DEMO_URL,
       query: [
-        { key: ".data", default: [] },
-        { key: ".loader", default: false },
+        RefreshKey % 2 === 0
+          ? { key: ".data", default: [] }
+          : { key: ".loader", default: false },
       ],
     },
     null,
     null,
     null,
-    RefreshKey // used for dynamic data mapping or data fetching
+    { refreshKey: RefreshKey } // used for dynamic data mapping or data fetching
   );
   console.log("======data_format_6=======", data_format_6);
+  useEffect(() => {
+    setInterval(() => {
+      setRefreshKey((_RefreshKey) => _RefreshKey + 1);
+    }, 5000);
+  }, []);
 };
 
 /**
@@ -452,7 +458,7 @@ export const useQuery = (
   config = {},
   callback,
   callbackSuccess,
-  refreshKey = null,
+  {refreshKey} = {},
 ) => {}
 */
 ```
