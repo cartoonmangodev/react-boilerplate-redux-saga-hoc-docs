@@ -349,30 +349,26 @@ resetState(dontResetKeys); // it will reset only endpoints to initial state exce
 ## # Using useQuery in Different Ways
 
 ```js
-import { useState, useEffect } from "react";
-import {
-  useQuery,
-  // useMutateReducer,
-  // generateTimeStamp,
-} from "../../shared/src";
+import { useState } from "react";
+import { useQuery } from "../../shared/src";
 export default ({ useAuthHoc }) => {
-  // const {
-  //   ON_SUCCESS,
-  //   ON_UNMOUNT,
-  //   ON_ERROR,
-  //   ON_LOADING,
-  //   ON_TOAST,
-  // } = commonConstants;
   const [RefreshKey, setRefreshKey] = useState(1);
   const {
     reducerConstants: { DEMO_URL },
     reducerName,
   } = useAuthHoc();
-  // console.clear();
+  console.clear();
   const reducerData = useQuery(reducerName, null, null, null, () =>
     console.log("reducer called")
   );
   console.log("======whole reducer data=======", reducerData);
+  const data_format = useQuery(reducerName, "profile", {
+    query: [{ key: ".profile" }],
+    requiredKey: ["profile"],
+    defaultDataFormat: false,
+    default: null,
+  });
+  console.log("======data_format=======", data_format);
   const data_format_0 = useQuery(reducerName, DEMO_URL);
   console.log("======data_format_0=======", data_format_0);
   const data_format_1 = useQuery(reducerName, { key: DEMO_URL });
@@ -438,11 +434,12 @@ export default ({ useAuthHoc }) => {
   useEffect(() => {
     setInterval(() => {
       setRefreshKey((_RefreshKey) => _RefreshKey + 1);
-    }, 5000);
+    }, 2000);
   }, []);
 };
 
 /**
+ * defaultDataFormat
  * initialLoaderState
  * requiredKey
  * default
