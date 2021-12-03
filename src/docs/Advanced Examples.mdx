@@ -323,3 +323,25 @@ export default ({ useAuthHoc }) => {
   }, []);
 };
 ```
+
+## # Using useResetState
+
+```js
+import { useEffect } from "react";
+// import { ON_UNMOUNT } from 'shared/src/utils/commonReduxSagaConverter/commonConstants';
+
+const resetState = useResetState(reducerName);
+const dontResetKeys = ["isLoggedIn"];
+resetState(dontResetKeys); // it will reset state to initial state except some dontResetKeys
+```
+
+## # Using useResetOnlyApiEndPointsState
+
+```js
+import { useEffect } from "react";
+// import { ON_UNMOUNT } from 'shared/src/utils/commonReduxSagaConverter/commonConstants';
+
+const resetState = useResetOnlyApiEndPointsState(reducerName);
+const dontResetKeys = ["isLoggedIn"];
+resetState(dontResetKeys); // it will reset only endpoints to initial state except some dontResetKeys
+```
