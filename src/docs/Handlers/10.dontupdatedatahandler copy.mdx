@@ -59,3 +59,24 @@ DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
   filter: [["filter-1"], ["filter-2"], ["filter-2"]],
 });
 ```
+
+## # Dont Update Data Handler - Api Reference
+
+      Note:
+    - The code below are the built in handler function.
+    - Don't copy and paste this handler, it is already available with this hoc.
+    - You will learn how to create your own custom handler in below.
+    - If you want to customize this handler you can do it.
+
+```javascript {.line-numbers}
+import { generateTimeStamp } from "../helpers";
+
+export const dontUpdateDataHandler = ({ successDataStatusCode }) => ({
+  statusCode,
+} = {}) => ({
+  statusCode: successDataStatusCode || statusCode,
+  error: false,
+  lastUpdated: generateTimeStamp(),
+  isError: false,
+});
+```

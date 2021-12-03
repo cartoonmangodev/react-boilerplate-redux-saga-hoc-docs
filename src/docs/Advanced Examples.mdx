@@ -345,3 +345,114 @@ const resetState = useResetOnlyApiEndPointsState(reducerName);
 const dontResetKeys = ["isLoggedIn"];
 resetState(dontResetKeys); // it will reset only endpoints to initial state except some dontResetKeys
 ```
+
+## # Using useQuery in Different Ways
+
+```js
+import { useState } from "react";
+import {
+  useQuery,
+  // useMutateReducer,
+  // generateTimeStamp,
+} from "../../shared/src";
+export default ({ useAuthHoc }) => {
+  // const {
+  //   ON_SUCCESS,
+  //   ON_UNMOUNT,
+  //   ON_ERROR,
+  //   ON_LOADING,
+  //   ON_TOAST,
+  // } = commonConstants;
+  const [RefreshKey] = useState(null);
+  const {
+    reducerConstants: { DEMO_URL },
+    reducerName,
+  } = useAuthHoc();
+  console.clear();
+  const reducerData = useQuery(reducerName, null, null, null, () =>
+    console.log("reducer called")
+  );
+  console.log("======whole reducer data=======", reducerData);
+  const data_format_0 = useQuery(reducerName, DEMO_URL);
+  console.log("======data_format_0=======", data_format_0);
+  const data_format_1 = useQuery(reducerName, { key: DEMO_URL });
+  console.log("======data_format_1=======", data_format_1);
+  const data_format_2 = useQuery(reducerName, [{ key: DEMO_URL }]);
+  console.log("======data_format_2=======", data_format_2);
+  const data_format_3 = useQuery(reducerName, {
+    key: DEMO_URL,
+    query: [
+      { key: ".data", default: [] },
+      { key: ".loader", default: false },
+    ],
+  });
+  console.log("======data_format_3=======", data_format_3);
+  const data_format_4 = useQuery(reducerName, DEMO_URL, [
+    {
+      query: [
+        { key: ".data", default: [] },
+        { key: ".loader", default: false },
+      ],
+    },
+    {
+      query: [{ key: ".toast", default: {} }],
+    },
+  ]);
+  console.log("======data_format_4=======", data_format_4);
+  const data_format_5 = useQuery(
+    reducerName,
+    DEMO_URL,
+    [
+      {
+        query: [
+          { key: ".data", default: [] },
+          { key: ".loader", default: false },
+        ],
+      },
+      {
+        query: [{ key: ".toast", default: {} }],
+      },
+    ],
+    (rest) => rest,
+    () => {
+      console.log("data_format_5 callback called");
+    }
+  );
+  console.log("======data_format_5=======", data_format_5);
+  const data_format_6 = useQuery(
+    reducerName,
+    {
+      key: DEMO_URL,
+      query: [
+        { key: ".data", default: [] },
+        { key: ".loader", default: false },
+      ],
+    },
+    null,
+    null,
+    null,
+    RefreshKey // used for dynamic data mapping or data fetching
+  );
+  console.log("======data_format_6=======", data_format_6);
+};
+
+/**
+ * initialLoaderState
+ * requiredKey
+ * default
+ * filter
+ * query
+ * key
+ */
+
+/** Reference useQuery function
+export const useQuery = (
+  name = null,
+  array = [],
+  config = {},
+  callback,
+  callbackSuccess,
+  refreshKey = null,
+) => {}
+*/
+```

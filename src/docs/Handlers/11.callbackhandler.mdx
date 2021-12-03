@@ -1,0 +1,109 @@
+---
+name: 3.1.2 callback Handler
+route: /docs/handlers/callback-handler
+parent: Documentation
+menu: 3. Handlers
+---
+
+# Callback Handler
+
+## # Things to Remember
+
+     - This handler won't update only data.
+     - But it will update loaders,error state, and also toast.
+     - This handler will work only on api calls and custom task.
+
+## # Callback Handler without filter
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Callback-Handler",
+    callback: (previousData, responseData, rest: {statusCode, ...rest} = {}, status) => ({
+      loading: null,
+      data: status === 200 ? [...previousData, ...responseData] : responseData,
+    }),
+  },
+});
+```
+
+## # Callback Handler with filter
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Callback-Handler",
+    callback: (previousData, successData, rest: {statusCode, ...rest} = {}, status) => ({
+      loading: null,
+      data: status === 200 ? [...previousData, ...successData] : previousData,
+    }),
+  },
+  filter: ["name"],
+});
+```
+
+## # Dont Update Data Handler with Multi-filter
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Callback Handler",
+     callback: (previousData, successData, rest: {statusCode, ...rest} = {}, status) => ({
+      loading: null,
+      data: status === 200 ? [...previousData, ...successData] : previousData,
+    }),
+  },
+  filter: [["filter-1"], ["filter-2"], ["filter-2"]],
+});
+```
+
+## # Callback Handler Function - Api
+
+      Note:
+    - The code below are the built in handler function.
+    - Don't copy and paste this handler, it is already available with this hoc.
+    - You will learn how to create your own custom handler in below.
+    - If you want to customize this handler you can do it.
+
+```javascript {.line-numbers}
+import invariant from "invariant";
+import { typeOf } from "../helpers";
+const checkKey = (callback) => {
+  invariant(
+    typeOf(callback) === "function",
+    `(react-boilerplate-redux-saga-hoc) ${
+      typeof callback === "undefined"
+        ? "'Callback-Handler' required callback key"
+        : "callback is not a function"
+    }`
+  );
+};
+export const callbackHandler = ({
+  task: { callback } = {},
+  successData = {},
+  successDataStatusCode,
+}) => ({ data: oldData = {}, statusCode, ...rest } = {}) => {
+  checkKey(callback);
+  return callback({
+    oldData: oldData,
+    newData: successData,
+    rest: { ...rest, statusCode },
+    status: statusCode || successDataStatusCode,
+  });
+};
+```
