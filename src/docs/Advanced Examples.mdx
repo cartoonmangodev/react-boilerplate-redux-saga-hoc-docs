@@ -414,7 +414,7 @@ export default ({ useAuthHoc }) => {
       },
     ],
     (rest) => rest,
-    () => {
+    (updatedData /* Updated Data */, previousData /* Previous Data */) => {
       console.log("data_format_5 callback called");
     }
   );
