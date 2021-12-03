@@ -1,0 +1,325 @@
+---
+name: 6. Advanced Examples
+route: /docs/advanced-examples
+---
+
+# Advanced Examples
+
+## # creating config file
+
+```js
+/* config.js */
+import { HOC as HocConfigure } from "react-boilerplate-redux-saga-hoc";
+
+const HOC = HocConfigure({
+  handlers: [],
+  useHocHook: true,
+});
+
+const TEST_GET_API =
+  "https://jsonplaceholder.typicode.com/posts/"; /* Default method GET */
+
+const TEST_GET_BY_ID_API = ({ id }) =>
+  `https://jsonplaceholder.typicode.com/posts/${id}`; /* Default method GET */
+
+const TEST_POSTS_API = {
+  url: "https://jsonplaceholder.typicode.com/posts/",
+  method: "POST",
+};
+
+const TEST_WITH_CONFIG_API = {
+  url: "https://jsonplaceholder.typicode.com/posts/",
+  method: "GET",
+  responseStatusCode: [900] /* optional */,
+  responseStatusCodeKey: "code" /* optional */,
+  responseDataKey: "data" /* optional */,
+  responseMessageKey: "message" /* optional */,
+};
+const HOC = HocConfigure({ handlers: [] });
+const useAuthHoc = HOC({
+  initialState: {
+    profile: {},
+  },
+  useHook: true /* This will avoid unwanted rendering on every state changes */,
+  dontReset: {
+    TEST_GET_API /* If you pass anything on don't reset it wont reset the paricular state on setting to reset */,
+  },
+  apiEndPoints: { TEST_GET_API, TEST_POSTS_API, TEST_WITH_CONFIG_API },
+  constantReducer: ({ type, state, resetState }) => {
+    /* For handling custom action */
+    if (type === "logout") return resetState;
+    return state;
+  },
+  name: "Auth" /* Reducer name */,
+});
+
+export { useAuthHoc };
+```
+
+## # Modifing State using Mutation
+
+```js
+import React, { useEffect } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutation,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_GET_BY_ID_API_CALL, TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+  /* useQuery hook for getting data from the reducer */
+  const mutate = useMutation(reducerName);
+  /* useMutation hook for modifying data in the reducer */
+
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_GET_BY_ID_API_CALL({
+      request: {
+        params: { id: 1 },
+      },
+    });
+    setTimeout(() => {
+      mutate({
+        key: TEST_GET_BY_ID_API,
+        value: {
+          data: [{ title: "movie" }],
+        },
+      });
+    }, 3000);
+    return () => TEST_GET_API_CANCEL(); /* for cancelling api on unmounting */
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # Using useMutateReducer
+
+```js
+import React, { useEffect } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutateReducer,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: { TEST_GET_BY_ID_API },
+    reducerName,
+    actions: { TEST_GET_BY_ID_API_CALL, TEST_GET_BY_ID_API_CANCEL },
+  } = useAuthHoc();
+  /* useQuery hook for getting data from the reducer */
+  const mutateState = useMutateReducer(reducerName);
+  /* useMutation hook for modifying data in the reducer */
+
+  const [
+    { loader, data, lastUpdated, isError, error, toast },
+  ] = useQuery(reducerName, [TEST_GET_BY_ID_API]);
+
+  useEffect(() => {
+    TEST_GET_BY_ID_API_CALL({
+      request: {
+        params: { id: 1 },
+      },
+    });
+    mutateState((state) => ({
+      isLoggedIn: true,
+      [TEST_GET_BY_ID_API]: {
+        ...state[TEST_GET_BY_ID_API],
+        loader: false,
+      },
+      [TEST_GET_BY_ID_API]: newObject(
+        state[TEST_GET_BY_ID_API],
+        ({ data: Data }) => ({
+          ...data,
+          loader: false,
+        })
+      ),
+    }));
+    return () => TEST_GET_API_CANCEL(); /* for cancelling api on unmounting */
+  }, []);
+
+  return <div>{data.map({ title }(<li>{title}</li>))}</div>;
+}
+```
+
+## # Using useStaleRefresh
+
+```js
+import React, { useEffect } from "react";
+import {
+  HOC as HocConfigure,
+  useQuery,
+  useMutateReducer,
+  newObject,
+} from "react-boilerplate-redux-saga-hoc";
+import { compose } from "redux";
+import { useAuthHoc } from "./config";
+
+function basicExample(props) {
+  const {
+    reducerConstants: {
+      VENDORS_GET_DASBOARD_API,
+      VENDORS_GET_ORDERS_BY_DAY_API,
+    },
+    reducerName,
+    actions: {
+      VENDORS_GET_DASBOARD_API_CALL,
+      VENDORS_GET_ORDERS_BY_DAY_API_CALL,
+      VENDORS_GET_DASBOARD_API_CANCEL,
+      VENDORS_GET_ORDERS_BY_DAY_API_CANCEL,
+    },
+  } = useAuthHoc();
+  const pollingConfig = {
+    request: {
+      polling: true,
+      delay: 8000,
+    },
+  };
+  const [refresh, isUpdating] = useStaleRefresh(
+    VENDORS_GET_DASBOARD_API_CALL,
+    VENDORS_GET_DASBOARD_API,
+    pollingConfig
+  );
+  const [refreshOrders, isUpdating] = useStaleRefresh(
+    VENDORS_GET_ORDERS_BY_DAY_API_CALL,
+    VENDORS_GET_ORDERS_BY_DAY_API,
+    pollingConfig
+  );
+  useEffect(() => {
+    function pollingStart() {
+      /// refresh({loader, clearData, config}); optional parameters
+      refresh();
+      refreshOrders();
+    }
+    function pollingEnd() {
+      VENDORS_GET_DASBOARD_API_CANCEL();
+      VENDORS_GET_ORDERS_BY_DAY_API_CANCEL();
+    }
+    pollingStart();
+    window.addEventListener("online", pollingStart);
+    window.addEventListener("offline", pollingEnd);
+    return () => {
+      window.removeEventListener("online", pollingStart);
+      window.removeEventListener("offline", pollingEnd);
+      VENDORS_GET_DASBOARD_API_CANCEL();
+      VENDORS_GET_ORDERS_BY_DAY_API_CANCEL();
+    };
+  }, []);
+}
+```
+
+## # Using asyncFuntion
+
+```js
+import { useEffect } from "react";
+// import { ON_UNMOUNT } from 'shared/src/utils/commonReduxSagaConverter/commonConstants';
+
+class CustomError extends Error {
+  constructor(response, ...params) {
+    // Pass remaining arguments (including vendor specific ones) to parent constructor
+    super(...params);
+
+    // Maintains proper stack trace for where our error was thrown (only available on V8)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, CustomError);
+    }
+
+    // this.name =
+    // Custom debugging information
+    this.response = response;
+  }
+}
+
+export default ({ useAuthHoc }) => {
+  const {
+    // eslint-disable-next-line no-unused-vars
+    actions: { DEMO_URL_CALL, DEMO_URL_CANCEL, DEMO_URL_CUSTOM_TASK },
+  } = useAuthHoc();
+  useEffect(() => {
+    // setInterval(() => {
+    DEMO_URL_CALL({
+      task: {
+        name: "Callback-Handler",
+        infiniteEnd: true,
+        callback: () => ({
+          loading: null,
+        }),
+      },
+      request: {
+        errorDataHandling: true,
+        polling: true,
+        delay: 2000,
+        retry: 2,
+        onCancelTask: () => {
+          console.log("cancel");
+        },
+        asyncFunction: async (url) => {
+          try {
+            const response = await fetch(url);
+            const data = await response.json();
+            // console.log(data, response, 'data');
+            if (response.status === 200)
+              return Promise.resolve({
+                data,
+                status: response.status,
+                message: response.statusText,
+              });
+            throw new CustomError(
+              { isAxiosError: true, response },
+              "AXIOS ERROR"
+            );
+          } catch (err) {
+            console.log(typeof err);
+            if (err && typeof err === "object" && err.isAxiosError)
+              return Promise.reject({
+                message: err.response.message,
+                isAxiosError: true,
+                response: {
+                  status: err.response.status,
+                  message: err.response.statusText,
+                  data: {
+                    hello: "jddhd",
+                  },
+                },
+              });
+            return Promise.reject({
+              message: err.response && err.response.message,
+              isAxiosError: true,
+              response: {
+                status: err.response && err.response.status,
+                message: err.response && err.response.statusText,
+                data: {
+                  hello: "jddhd",
+                },
+              },
+            });
+          }
+        },
+        asyncFunctionParams: ["https://jsonplaceholder.typicode.com/posts/"],
+      },
+      // request: {
+      //   polling: true,
+      //   delay: 2000,
+      // },
+    });
+    // DEMO_URL_CANCEL(ON_UNMOUNT);
+    // DEMO_URL_CUSTOM_TASK();
+    // }, 2000);
+  }, []);
+};
+```
