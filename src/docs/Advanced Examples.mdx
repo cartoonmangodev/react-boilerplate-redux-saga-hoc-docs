@@ -362,14 +362,23 @@ export default ({ useAuthHoc }) => {
     console.log("reducer called")
   );
   console.log("======whole reducer data=======", reducerData);
-  const data_format = useQuery(reducerName, "profile", {
+  const data_format_0 = useQuery(reducerName, DEMO_URL);
+  const data_format_0 = useQuery(reducerName, "profile", {
     query: [{ key: ".profile" }],
     requiredKey: ["profile"],
     defaultDataFormat: false,
     default: null,
   });
-  console.log("======data_format=======", data_format);
-  const data_format_0 = useQuery(reducerName, DEMO_URL);
+  const data_format_0 = useQuery({
+    reducerName,
+    key: {
+      key: "profile",
+      // query: [{ key: '.profile' }],
+      // requiredKey: ['profile'],
+      defaultDataFormat: false,
+      default: [],
+    },
+  });
   console.log("======data_format_0=======", data_format_0);
   const data_format_1 = useQuery(reducerName, { key: DEMO_URL });
   console.log("======data_format_1=======", data_format_1);
@@ -431,11 +440,11 @@ export default ({ useAuthHoc }) => {
     { refreshKey: RefreshKey } // used for dynamic data mapping or data fetching
   );
   console.log("======data_format_6=======", data_format_6);
-  useEffect(() => {
-    setInterval(() => {
-      setRefreshKey((_RefreshKey) => _RefreshKey + 1);
-    }, 2000);
-  }, []);
+  // useEffect(() => {
+  //   setInterval(() => {
+  //     setRefreshKey(_RefreshKey => _RefreshKey + 1);
+  //   }, 2000);
+  // }, []);
 };
 
 /**
