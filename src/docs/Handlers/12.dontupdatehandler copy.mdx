@@ -1,0 +1,29 @@
+---
+name: 3.1.3 Dont Update Handler
+route: /docs/handlers/dont-update-handler
+parent: Documentation
+menu: 3. Handlers
+---
+
+# Don't update Handler
+
+## # Things to Remember
+
+     - This handler won't update any data.
+     - But it will update loaders,error state, and also toast.
+     - This handler will work only on api calls.
+
+## # Dont Update Data Handler without filter
+
+```javascript {.line-numbers}
+import { HOC, commonConstants, store } from "react-boilerplate-redux-saga-hoc";
+
+const { ON_SUCCESS } = commonConstants;
+const { DEMO_API_CONFIGURATION_CUSTOM_TASK } = props;
+
+DEMO_API_CONFIGURATION_CUSTOM_TASK(ON_SUCCESS, {
+  task: {
+    name: "Don't-Update-Handler",
+  },
+});
+```
