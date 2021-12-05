@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "docz dev",
     "build": "docz build",
-    "serve": "docz serve"
+    "serve": "docz serve",
+    "deploy": "yarn build && git add . && git commit -m \"Modified\" && git push origin master"
   },
   "dependencies": {
     "algoliasearch": "^3.35.1",
